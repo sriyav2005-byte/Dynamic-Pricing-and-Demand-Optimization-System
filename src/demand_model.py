@@ -58,3 +58,5 @@ def predict_new(model):
     prediction = model.predict(new_data)
 
     print("\n🧪 New Sample Prediction:", prediction[0])
+if __name__ == "__main__":
+    train_model()

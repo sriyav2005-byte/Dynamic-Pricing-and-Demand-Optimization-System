@@ -10,9 +10,10 @@ def find_optimal_profit_price(model, base_price, cost):
 
     for p in prices:
 
+        # ✅ FIXED INPUT (MATCHES MODEL)
         input_df = pd.DataFrame({
-            "Price": [p],
-            "Revenue": [p * 10]
+            "UnitPrice": [p],
+            "Quantity": [1]   # default quantity
         })
 
         demand = model.predict(input_df)[0]

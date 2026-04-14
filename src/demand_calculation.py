@@ -9,8 +9,8 @@ def calculate_demand(df):
     }).reset_index()
 
     demand_data.rename(columns={
-        "Quantity": "Demand",
-        "UnitPrice": "Price"
+        "Quantity": "Quantity",
+        "UnitPrice": "UnitPrice"
     }, inplace=True)
 
     return demand_data
