@@ -1,3 +1,45 @@
+# ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment variables (never commit secrets)
+.env
+.env.local
+.env.*.local
+
+# ── ML / Model artifacts ─────────────────────────────────────────────────────
+# Serialised model files are large binaries — store in cloud storage instead
 *.pkl
+# Bandit state is machine-specific; let each deployment learn from scratch
+backend/ml/bandit_state.json
+
+# ── Database ──────────────────────────────────────────────────────────────────
+# SQLite file is local dev only — use a real DB in production
+*.db
+*.sqlite3
+
+# ── Next.js / Node ───────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Dependency lock files (optional — remove if you want to commit them)
+# package-lock.json
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
