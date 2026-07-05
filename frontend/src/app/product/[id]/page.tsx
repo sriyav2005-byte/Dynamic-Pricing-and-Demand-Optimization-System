@@ -123,8 +123,8 @@ export default function ProductDetailPage() {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="w-12 h-12 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p style={{ color: "#64748b" }}>Loading product details...</p>
+          <div className="w-12 h-12 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm text-slate-400 font-medium">Loading product details...</p>
         </div>
       </div>
     );
@@ -133,8 +133,8 @@ export default function ProductDetailPage() {
   if (!product) {
     return (
       <div className="p-8 text-center">
-        <p className="text-red-400">Product not found</p>
-        <button onClick={() => router.back()} className="mt-4 text-indigo-400">Go back</button>
+        <p className="text-red-500 font-bold">Product not found</p>
+        <button onClick={() => router.back()} className="mt-4 text-violet-600 font-bold hover:underline cursor-pointer">Go back</button>
       </div>
     );
   }
@@ -148,8 +148,7 @@ export default function ProductDetailPage() {
       {/* Back */}
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-2 text-sm mb-6 transition-colors"
-        style={{ color: "#94a3b8" }}
+        className="flex items-center gap-2 text-sm mb-6 transition-colors text-slate-400 hover:text-violet-600 font-semibold cursor-pointer"
       >
         <ArrowLeft size={16} />
         Back to Dashboard
@@ -161,19 +160,19 @@ export default function ProductDetailPage() {
           <div className="flex items-center gap-3 mb-2">
             <div
               className="w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-bold"
-              style={{ background: "linear-gradient(135deg, #6366f133, #6366f115)", border: "1px solid #6366f130", color: "#818cf8" }}
+              style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.15)", color: "#7c3aed" }}
             >
               #{product.product_id}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Product {product.product_id}</h1>
+              <h1 className="text-2xl font-extrabold text-slate-900">Product {product.product_id}</h1>
               <span className="badge badge-blue capitalize">{product.category}</span>
             </div>
           </div>
         </div>
         {isExpiring && (
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl"
-            style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444" }}>
+            style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", color: "#ef4444" }}>
             <AlertTriangle size={16} />
             <span className="text-sm font-semibold">Expiring in {product.days_to_expiry} days</span>
           </div>
@@ -186,53 +185,53 @@ export default function ProductDetailPage() {
           {/* Stats row */}
           <div className="grid grid-cols-4 gap-4">
             {[
-              { label: "Cost Price", value: fmt(product.cost_price), icon: DollarSign, color: "#6366f1" },
+              { label: "Cost Price", value: fmt(product.cost_price), icon: DollarSign, color: "#7c3aed" },
               { label: "MRP", value: fmt(product.mrp), icon: Tag, color: "#22d3ee" },
               { label: "Stock Level", value: product.stock_level, icon: Boxes, color: product.stock_level < 30 ? "#ef4444" : "#10b981" },
               { label: "Days to Expiry", value: `${product.days_to_expiry}d`, icon: Calendar, color: isExpiring ? "#ef4444" : "#10b981" },
             ].map(({ label, value, icon: Icon, color }) => (
-              <div key={label} className="glass rounded-2xl p-4">
+              <div key={label} className="bg-white border border-slate-200/60 rounded-2xl p-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-3">
                   <Icon size={15} style={{ color }} />
-                  <span className="text-xs" style={{ color: "#64748b" }}>{label}</span>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{label}</span>
                 </div>
-                <div className="text-lg font-bold text-white">{value}</div>
+                <div className="text-lg font-extrabold text-slate-800">{value}</div>
               </div>
             ))}
           </div>
 
           {/* Recommendation Card */}
           {rec && (
-            <div className="glass rounded-2xl p-6" style={{ border: "1px solid rgba(99,102,241,0.2)" }}>
+            <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm" style={{ borderColor: "rgba(124,58,237,0.25)" }}>
               <div className="flex items-center gap-2 mb-5">
-                <Sparkles size={18} style={{ color: "#22d3ee" }} />
-                <h2 className="font-semibold text-white">AI Price Recommendation</h2>
+                <Sparkles size={18} className="text-cyan-600" />
+                <h2 className="font-extrabold text-slate-800 text-base">AI Price Recommendation</h2>
                 {rec.constraint_applied && (
                   <span className="badge badge-amber ml-auto">{rec.constraint_applied.replace("_", " ")}</span>
                 )}
               </div>
 
               <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="glass rounded-xl p-4">
-                  <div className="text-xs mb-1" style={{ color: "#64748b" }}>Current Price</div>
-                  <div className="text-2xl font-bold text-white">{fmt(rec.current_price)}</div>
-                  <div className="text-xs mt-1" style={{ color: "#64748b" }}>Margin: {margin.toFixed(1)}%</div>
+                <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Current Price</div>
+                  <div className="text-2xl font-extrabold text-slate-800">{fmt(rec.current_price)}</div>
+                  <div className="text-xs font-semibold text-slate-500 mt-1">Margin: {margin.toFixed(1)}%</div>
                 </div>
-                <div className="rounded-xl p-4" style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.3)" }}>
-                  <div className="text-xs mb-1" style={{ color: "#818cf8" }}>Recommended Price</div>
+                <div className="rounded-xl p-4" style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.18)" }}>
+                  <div className="text-xs font-bold text-violet-650 uppercase tracking-wider mb-1">Recommended Price</div>
                   <div className="text-2xl font-bold gradient-text">{fmt(rec.recommended_price)}</div>
                 </div>
-                <div className="glass rounded-xl p-4">
-                  <div className="text-xs mb-1" style={{ color: "#64748b" }}>Expected Profit</div>
-                  <div className="text-2xl font-bold" style={{ color: "#10b981" }}>₹{rec.expected_profit.toFixed(0)}</div>
-                  <div className="text-xs mt-1" style={{ color: "#64748b" }}>Demand: {rec.expected_demand.toFixed(1)} units</div>
+                <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Expected Profit</div>
+                  <div className="text-2xl font-bold text-emerald-600">₹{rec.expected_profit.toFixed(0)}</div>
+                  <div className="text-xs font-semibold text-slate-500 mt-1">Demand: {rec.expected_demand.toFixed(1)} units</div>
                 </div>
               </div>
 
               <button
                 onClick={handleApply}
                 disabled={applying || applied}
-                className="glow-btn px-6 py-3 rounded-xl font-semibold text-white text-sm flex items-center gap-2"
+                className="glow-btn px-6 py-3 rounded-xl font-semibold text-white text-sm flex items-center gap-2 cursor-pointer"
               >
                 {applied ? (
                   <><CheckCircle size={16} />Applied Successfully!</>
@@ -247,18 +246,18 @@ export default function ProductDetailPage() {
 
           {/* Demand vs Price Chart */}
           {rec && (
-            <div className="glass rounded-2xl p-6">
-              <h2 className="font-semibold text-white mb-4">Demand & Profit vs Price</h2>
+            <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm">
+              <h2 className="font-extrabold text-slate-800 mb-4 text-base">Demand & Profit vs Price</h2>
               <DemandPriceChart
                 options={rec.price_options}
                 currentPrice={rec.current_price}
                 recommendedPrice={rec.recommended_price}
                 costPrice={product.cost_price}
               />
-              <div className="flex gap-4 mt-3 text-xs" style={{ color: "#64748b" }}>
+              <div className="flex gap-4 mt-3 text-xs font-semibold text-slate-400">
                 <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 rounded" style={{ background: "#f59e0b" }} /> Current price</div>
                 <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 rounded" style={{ background: "#10b981" }} /> Recommended</div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 rounded" style={{ background: "#6366f1" }} /> Demand</div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 rounded" style={{ background: "#7c3aed" }} /> Demand</div>
                 <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 rounded" style={{ background: "#22d3ee" }} /> Profit</div>
               </div>
             </div>
@@ -281,8 +280,8 @@ export default function ProductDetailPage() {
            * so managers can see the full pricing landscape at a glance.
            */}
           {rec && (
-            <div className="glass rounded-2xl p-4 mt-4">
-              <h3 className="text-sm font-semibold text-white mb-3">All Price Tiers (Bandit)</h3>
+            <div className="bg-white border border-slate-200/60 rounded-2xl p-4 mt-4 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-800 mb-3">All Price Tiers (Bandit)</h3>
               <div className="space-y-2">
                 {rec.price_options.map((opt) => {
                   const isRec = Math.abs(opt.price - rec.recommended_price) < 0.01;
@@ -290,16 +289,16 @@ export default function ProductDetailPage() {
                     <div key={opt.arm}
                       className="flex items-center justify-between px-3 py-2 rounded-xl text-xs"
                       style={{
-                        background: isRec ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.03)",
-                        border: `1px solid ${isRec ? "rgba(99,102,241,0.35)" : "rgba(255,255,255,0.05)"}`,
+                        background: isRec ? "rgba(124, 58, 237, 0.08)" : "rgba(0,0,0,0.015)",
+                        border: `1px solid ${isRec ? "rgba(124, 58, 237, 0.18)" : "rgba(0,0,0,0.04)"}`,
                       }}
                     >
-                      <span className="font-semibold" style={{ color: isRec ? "#818cf8" : "#94a3b8" }}>
+                      <span className="font-semibold" style={{ color: isRec ? "#7c3aed" : "#475569" }}>
                         {fmt(opt.price)}
                         {isRec && " ★"}
                       </span>
-                      <span style={{ color: "#10b981" }}>₹{opt.predicted_profit.toFixed(0)}</span>
-                      <span style={{ color: "#64748b" }}>~{opt.predicted_demand.toFixed(0)} units</span>
+                      <span className="font-bold text-emerald-600">₹{opt.predicted_profit.toFixed(0)}</span>
+                      <span className="text-slate-500 font-medium">~{opt.predicted_demand.toFixed(0)} units</span>
                     </div>
                   );
                 })}

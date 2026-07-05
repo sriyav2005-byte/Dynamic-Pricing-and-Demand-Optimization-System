@@ -1,8 +1,6 @@
 # PriceIQ — Dynamic Pricing & Demand Optimization System
 
-A full-stack ML-powered pricing engine for retail stores. Recommends
-optimal product prices using **XGBoost demand prediction** and a **Thompson
-Sampling contextual bandit**, with a real-time Next.js dashboard.
+A full-stack ML-powered pricing engine for retail stores. Recommends optimal product prices using **XGBoost demand prediction** and a **Thompson Sampling contextual bandit**, with a real-time Next.js dashboard.
 
 ---
 
@@ -38,7 +36,7 @@ Sampling contextual bandit**, with a real-time Next.js dashboard.
 
 ### 1. Demand Prediction (XGBoost)
 
-Trained on `data/dynamic_pricing_data.csv` — 9,000 rows of retail transactions.
+Trained on `data/dynamic_pricing_data.csv` — 9,000 retail transactions.
 
 | Feature | Description |
 |---------|-------------|
@@ -84,10 +82,10 @@ Trained on `data/dynamic_pricing_data.csv` — 9,000 rows of retail transactions
 │   │   ├── main.py              # FastAPI entry point + CORS + lifespan seeder
 │   │   ├── database.py          # SQLAlchemy engine + session factory
 │   │   ├── models/              # ORM models (Product, Sale)
-│   │   ├── schemas/             # Pydantic request/response schemas
-│   │   ├── api/                 # Route handlers (products, pricing, sales)
-│   │   ├── services/            # Business logic (demand_predictor, bandit,
-│   │   │                        #   pricing_engine, analytics)
+│   │   ├── schemas/             # Pydantic schemas (product, competitor, agent, etc.)
+│   │   ├── api/                 # Route handlers (products, pricing, sales, competitor, agent, etc.)
+│   │   ├── services/            # Business logic (demand_predictor, bandit, pricing_engine,
+│   │   │                        #   analytics, competitor_service, agent_service, etc.)
 │   │   └── utils/seed_data.py  # Auto-seeds DB from CSV on first run
 │   ├── ml/
 │   │   ├── train_demand_model.py  # XGBoost training script
@@ -97,13 +95,21 @@ Trained on `data/dynamic_pricing_data.csv` — 9,000 rows of retail transactions
 ├── frontend/
 │   ├── src/
 │   │   ├── app/
+│   │   │   ├── page.tsx              # Demonstration premium landing page
 │   │   │   ├── dashboard/page.tsx    # Product table with recommendations
 │   │   │   ├── product/[id]/page.tsx # Detail view with charts + simulator
+│   │   │   ├── competitors/page.tsx  # Competitor synced market overview
+│   │   │   ├── forecasting/page.tsx  # XGBoost 7d/30d forecast area chart
+│   │   │   ├── inventory/page.tsx    # Inventory risk scatter matrix & alerts
+│   │   │   ├── agent/page.tsx        # Chat interface with AI agent
 │   │   │   └── analytics/page.tsx    # KPI cards, trend chart, leaderboard
 │   │   ├── components/
 │   │   │   ├── ui/                  # Sidebar, StatCard
 │   │   │   ├── charts/              # DemandPriceChart, SalesTrendChart,
-│   │   │   │                        # ProfitBreakdownChart
+│   │   │   │                        #   ProfitBreakdownChart, ForecastChart
+│   │   │   ├── competitor/          # CompetitorTable, CompetitivenessGauge
+│   │   │   ├── inventory/           # InventoryMatrix
+│   │   │   ├── agent/               # ChatBubble, AgentResponseCard
 │   │   │   └── PriceSimulator.tsx   # Slider-based what-if tool
 │   │   └── lib/api.ts              # Typed Axios client for all endpoints
 │   └── .env.local                  # NEXT_PUBLIC_API_URL
@@ -131,8 +137,7 @@ cd backend
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
-The server auto-creates the SQLite database and seeds it from the CSV on
-first startup. Visit `http://localhost:8000/docs` for the Swagger UI.
+The server auto-creates the SQLite database and seeds it from the CSV on first startup. Visit `http://localhost:8000/docs` for the Swagger UI.
 
 ### 3. Start the frontend
 
@@ -146,17 +151,49 @@ npm run dev   # opens http://localhost:3000
 
 ## API Reference
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/products/` | List products (filter by category, stock, expiry) |
-| `GET` | `/products/{id}` | Single product |
-| `PATCH` | `/products/{id}` | Update stock / expiry / price |
-| `GET` | `/pricing/recommend/{id}` | Thompson Sampling recommendation |
-| `GET` | `/pricing/simulate/{id}?price=X` | What-if simulation |
-| `POST` | `/update-sales` | Record sale + update bandit |
-| `GET` | `/analytics/summary` | Revenue, profit, margin KPIs |
-| `GET` | `/analytics/trends` | Daily time-series for charts |
-| `GET` | `/categories` | Distinct category names |
+| Component | Method | Endpoint | Description |
+|-----------|--------|----------|-------------|
+| **Products** | `GET` | `/products/` | List products (filter by category, stock, expiry) |
+| | `GET` | `/products/{id}` | Single product |
+| | `PATCH` | `/products/{id}` | Update stock / expiry / price |
+| | `GET` | `/categories` | Distinct category names |
+| **Pricing Engine** | `GET` | `/pricing/recommend/{id}` | Thompson Sampling recommendation |
+| | `GET` | `/pricing/simulate/{id}?price=X` | What-if simulation |
+| **Sales** | `POST` | `/update-sales` | Record sale + update bandit |
+| **Analytics** | `GET` | `/analytics/summary` | Revenue, profit, margin KPIs |
+| | `GET` | `/analytics/trends` | Daily time-series for charts |
+| **Competitors** | `GET` | `/competitor/prices/{id}` | Get competitor prices for a single product |
+| | `GET` | `/competitor/market-overview` | Full competitor comparison table data |
+| | `GET` | `/competitor/strategy/{id}` | Recommended strategy based on competitor prices |
+| **Forecasting** | `GET` | `/forecasting/demand/{id}` | XGBoost 7/30-day forecast points with confidence bands |
+| | `GET` | `/forecasting/overview` | Forecast trend direction & summary |
+| **Inventory** | `GET` | `/inventory/overview` | Expiry risk table & category health details |
+| | `GET` | `/inventory/alerts` | Critical/Warning alerts for low stock and expiring items |
+| **AI Agent** | `POST` | `/agent/chat` | Send prompt to agent, returns typed structured content |
+| | `GET` | `/agent/suggestions` | Suggested follow-up prompt pills based on DB status |
+
+---
+
+## Competitor Price Intelligence System
+
+### How competitor prices are obtained
+To bypass issues with web scraping rate-limits and authentication blockers on Indian quick-commerce platforms, the backend uses a **deterministic seeded simulation** located in [competitor_service.py](file:///d:/Dynamic-Pricing-and-Demand-Optimization-System/backend/app/services/competitor_service.py) that acts as a real-time price synchronization feed:
+
+1. **Profiles**: Different platform profiles are configured to match real market strategies:
+   - **Blinkit**: Aggressive on personal care/snacks, pricing averages 3%–8% below MRP.
+   - **Zepto**: Premium styling, aggressive on beverages/dairy.
+   - **Swiggy Instamart**: Mid-range, highly stable.
+   - **BigBasket**: Volume-based pricing, tends to be cheapest on staples.
+2. **Deterministic Seed Hashing**: To prevent prices from "flickering" or regenerating random values on page refresh, the random seed is generated using the **MD5 hash** of `product_id-platform`:
+   ```python
+   seed_str = f"{product_id}-{platform}-v2"
+   seed_int = int(hashlib.md5(seed_str.encode()).hexdigest()[:8], 16)
+   rng = random.Random(seed_int)
+   ```
+3. **Constraints**: Simulated competitor prices vary realistically within platform-specific percentages of the product's MRP but are constrained to never drop below `cost_price + 5%` wholesale margin.
+4. **Metrics**:
+   - **Competitiveness Score**: Scaled `0-100` (where `100` = cheapest in the market, `0` = most expensive).
+   - **Pricing Strategies**: The engine automatically suggests actionable strategies (`undercut`, `match`, `premium`, `aggressive_discount`) depending on competitor spread, inventory health, and days to expiry.
 
 ---
 
@@ -176,7 +213,7 @@ No code changes needed — SQLAlchemy handles the dialect automatically.
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 16, TypeScript, Tailwind CSS, Recharts |
+| Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS, Recharts, Lucide Icons |
 | Backend | FastAPI, SQLAlchemy 2.0, Pydantic v2 |
 | Database | SQLite (dev) / PostgreSQL (prod) |
 | ML | XGBoost, scikit-learn, NumPy, pandas |

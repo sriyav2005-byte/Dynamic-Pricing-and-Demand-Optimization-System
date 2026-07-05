@@ -172,27 +172,26 @@ export default function DashboardPage() {
     <div className="p-8">
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-extrabold text-slate-900 mb-2">
           <span className="gradient-text">Pricing Dashboard</span>
         </h1>
-        <p className="text-sm" style={{ color: "#64748b" }}>
+        <p className="text-sm text-slate-500 font-medium">
           ML-recommended prices with Thompson Sampling bandit
         </p>
       </div>
 
       {/* ── Filter bar ─────────────────────────────────────────────────── */}
-      <div className="glass rounded-2xl p-4 mb-6 flex flex-wrap gap-3 items-center">
+      <div className="bg-white border border-slate-200/60 rounded-2xl p-4 mb-6 flex flex-wrap gap-3 items-center shadow-sm">
 
         {/* Text search (client-side) */}
         <div className="relative flex-1 min-w-48">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#64748b" }} />
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Search products..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-gray-500 bg-transparent outline-none"
-            style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+            className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 bg-white outline-none focus:border-violet-500 transition-colors"
           />
         </div>
 
@@ -200,12 +199,11 @@ export default function DashboardPage() {
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="px-4 py-2.5 rounded-xl text-sm text-white bg-transparent outline-none cursor-pointer"
-          style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+          className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-700 bg-white outline-none cursor-pointer focus:border-violet-500 transition-colors"
         >
-          <option value="" className="bg-gray-900">All Categories</option>
+          <option value="" className="bg-white text-slate-800">All Categories</option>
           {categories.map((c) => (
-            <option key={c} value={c} className="bg-gray-900 capitalize">{c}</option>
+            <option key={c} value={c} className="bg-white text-slate-800 capitalize">{c}</option>
           ))}
         </select>
 
@@ -213,18 +211,17 @@ export default function DashboardPage() {
         <select
           value={maxExpiry}
           onChange={(e) => setMaxExpiry(e.target.value === "" ? "" : parseInt(e.target.value))}
-          className="px-4 py-2.5 rounded-xl text-sm text-white bg-transparent outline-none cursor-pointer"
-          style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+          className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-700 bg-white outline-none cursor-pointer focus:border-violet-500 transition-colors"
         >
-          <option value="" className="bg-gray-900">Any Expiry</option>
-          <option value="7"  className="bg-gray-900">Expiring ≤ 7 days</option>
-          <option value="14" className="bg-gray-900">Expiring ≤ 14 days</option>
+          <option value="" className="bg-white text-slate-800">Any Expiry</option>
+          <option value="7"  className="bg-white text-slate-800">Expiring ≤ 7 days</option>
+          <option value="14" className="bg-white text-slate-800">Expiring ≤ 14 days</option>
         </select>
 
         {/* Manual refresh button — spinning icon shows loading state */}
         <button
           onClick={loadData}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium glow-btn"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold glow-btn text-white cursor-pointer"
         >
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           Refresh
@@ -232,13 +229,13 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Products table ──────────────────────────────────────────────── */}
-      <div className="glass rounded-2xl overflow-hidden">
+      <div className="bg-white border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm">
         {loading ? (
           // Full-table loading spinner
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <div className="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm" style={{ color: "#64748b" }}>Loading products...</p>
+              <div className="w-10 h-10 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-sm text-slate-400">Loading products...</p>
             </div>
           </div>
         ) : (
@@ -270,16 +267,16 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2">
                         <div
                           className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold"
-                          style={{ background: "rgba(99,102,241,0.15)", color: "#818cf8" }}
+                          style={{ background: "rgba(124,58,237,0.08)", color: "#7c3aed" }}
                         >
                           #{p.product_id}
                         </div>
                         <Link
                           href={`/product/${p.product_id}`}
-                          className="font-medium text-white hover:text-indigo-400 transition-colors flex items-center gap-1"
+                          className="font-semibold text-slate-800 hover:text-violet-600 transition-colors flex items-center gap-1"
                         >
                           Product {p.product_id}
-                          <ChevronRight size={12} />
+                          <ChevronRight size={12} className="text-slate-400" />
                         </Link>
                       </div>
                     </td>
@@ -291,19 +288,19 @@ export default function DashboardPage() {
 
                     {/* Stock — red if low */}
                     <td className="text-right">
-                      <span style={{ color: lowStock ? "#ef4444" : "#e2e8f0" }}>
+                      <span className={lowStock ? "text-red-500 font-bold" : "text-slate-700 font-medium"}>
                         {p.stock_level}
                       </span>
                     </td>
 
-                    <td className="text-right text-gray-400">{fmt(p.cost_price)}</td>
-                    <td className="text-right font-medium text-white">{fmt(p.current_price)}</td>
+                    <td className="text-right text-slate-500 font-medium">{fmt(p.cost_price)}</td>
+                    <td className="text-right font-bold text-slate-800">{fmt(p.current_price)}</td>
 
-                    {/* Recommended price — cyan, or dash if still loading */}
+                    {/* Recommended price — violet, or dash if still loading */}
                     <td className="text-right">
                       {rec
-                        ? <span className="font-bold" style={{ color: "#22d3ee" }}>{fmt(rec.recommended_price)}</span>
-                        : <span className="text-gray-600">—</span>
+                        ? <span className="font-bold text-violet-600">{fmt(rec.recommended_price)}</span>
+                        : <span className="text-slate-400">—</span>
                       }
                     </td>
 
@@ -318,7 +315,7 @@ export default function DashboardPage() {
                     {/* Expected profit from the recommendation */}
                     <td className="text-right">
                       {rec
-                        ? <span className="font-semibold" style={{ color: "#10b981" }}>₹{rec.expected_profit.toFixed(0)}</span>
+                        ? <span className="font-bold text-emerald-600">₹{rec.expected_profit.toFixed(0)}</span>
                         : "—"
                       }
                     </td>
@@ -326,7 +323,7 @@ export default function DashboardPage() {
                     {/* Expiry badge — red if < 7 days (at-risk) */}
                     <td>
                       <div className="flex items-center gap-1">
-                        {expiring && <AlertTriangle size={12} style={{ color: "#ef4444" }} />}
+                        {expiring && <AlertTriangle size={12} className="text-red-500 animate-pulse" />}
                         <span className={`badge ${expiring ? "badge-red" : "badge-green"}`}>
                           {p.days_to_expiry}d
                         </span>
@@ -338,15 +335,15 @@ export default function DashboardPage() {
                       <button
                         onClick={() => handleApply(p)}
                         disabled={!rec || applyingId === p.product_id}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all mx-auto"
+                        className="flex items-center gap-1 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all mx-auto"
                         style={{
-                          background: rec ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.05)",
-                          color:      rec ? "#818cf8" : "#475569",
-                          border:     `1px solid ${rec ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.05)"}`,
+                          background: rec ? "rgba(124,58,237,0.12)" : "rgba(0,0,0,0.02)",
+                          color:      rec ? "#7c3aed" : "#94a3b8",
+                          border:     `1px solid ${rec ? "rgba(124,58,237,0.2)" : "rgba(0,0,0,0.05)"}`,
                           cursor:     rec ? "pointer" : "not-allowed",
                         }}
                       >
-                        <Zap size={11} />
+                        <Zap size={11} className={rec ? "text-violet-600 fill-violet-200 animate-pulse" : ""} />
                         {applyingId === p.product_id ? "..." : "Apply"}
                       </button>
                     </td>
@@ -357,8 +354,8 @@ export default function DashboardPage() {
               {/* Empty state */}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="text-center py-12" style={{ color: "#64748b" }}>
-                    <Package size={32} className="mx-auto mb-2 opacity-40" />
+                  <td colSpan={10} className="text-center py-12 text-slate-400">
+                    <Package size={32} className="mx-auto mb-2 opacity-45" />
                     No products found
                   </td>
                 </tr>
@@ -369,7 +366,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Row count */}
-      <div className="mt-4 text-xs" style={{ color: "#475569" }}>
+      <div className="mt-4 text-xs text-slate-400 font-medium">
         Showing {filtered.length} of {products.length} products
       </div>
     </div>

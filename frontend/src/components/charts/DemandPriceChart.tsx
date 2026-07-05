@@ -51,14 +51,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       className="glass rounded-xl p-3"
       style={{ border: "1px solid rgba(99,102,241,0.3)" }}
     >
-      <p className="text-xs text-gray-400 mb-1">Price: ₹{Number(label).toFixed(2)}</p>
+      <p className="text-xs text-slate-500 font-bold mb-1">Price: ₹{Number(label).toFixed(2)}</p>
       {payload.map((p: any) => (
         <p key={p.dataKey} className="text-sm font-semibold" style={{ color: p.color }}>
           {p.name}: {
             // Demand shows in "units", profit shows in "₹"
             p.dataKey === "predicted_demand"
-              ? `${p.value.toFixed(1)} units`
-              : `₹${p.value.toFixed(0)}`
+               ? `${p.value.toFixed(1)} units`
+               : `₹${p.value.toFixed(0)}`
           }
         </p>
       ))}
@@ -79,7 +79,7 @@ export default function DemandPriceChart({ options, currentPrice, recommendedPri
       <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
 
         {/* Faint horizontal grid lines only (no vertical) for a cleaner look */}
-        <CartesianGrid stroke="rgba(255,255,255,0.04)" />
+        <CartesianGrid stroke="rgba(148, 163, 184, 0.12)" />
 
         {/* X axis: the price value of each arm */}
         <XAxis
