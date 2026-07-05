@@ -49,7 +49,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       className="glass rounded-xl p-3"
       style={{ border: "1px solid rgba(99,102,241,0.3)" }}
     >
-      <p className="text-xs text-gray-400 mb-2">{label}</p>
+      <p className="text-xs text-slate-500 font-bold mb-2">{label}</p>
       {payload.map((p: any) => (
         <p key={p.dataKey} className="text-sm font-semibold" style={{ color: p.color }}>
           {/* Units are displayed as a plain number; currency values get ₹ prefix */}
@@ -83,7 +83,7 @@ export default function SalesTrendChart({ data }: Props) {
         </defs>
 
         {/* Subtle grid lines — very low opacity to avoid visual clutter */}
-        <CartesianGrid stroke="rgba(255,255,255,0.04)" />
+        <CartesianGrid stroke="rgba(148, 163, 184, 0.12)" />
 
         {/* X axis: date strings, dark slate colour to match the theme */}
         <XAxis dataKey="date" stroke="#475569" tick={{ fontSize: 11, fill: "#64748b" }} />

@@ -84,7 +84,7 @@ export default function StatCard({
         </div>
 
         {/* Metric value (large), label, optional subtitle */}
-        <div className="text-2xl font-bold text-white mb-1">{value}</div>
+        <div className="text-2xl font-bold text-slate-800 mb-1">{value}</div>
         <div className="text-sm font-medium" style={{ color: "#94a3b8" }}>{title}</div>
         {subtitle && (
           <div className="text-xs mt-1" style={{ color: "#64748b" }}>{subtitle}</div>

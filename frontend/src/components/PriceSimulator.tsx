@@ -63,18 +63,18 @@ export default function PriceSimulator({ productId, costPrice, mrp, currentPrice
   const margin = ((price - costPrice) / costPrice) * 100;
 
   return (
-    <div className="glass rounded-2xl p-6">
+    <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-6">
-        <SlidersHorizontal size={18} style={{ color: "#22d3ee" }} />
-        <h3 className="font-semibold text-white">Price Simulator</h3>
+        <SlidersHorizontal size={18} className="text-cyan-600" />
+        <h3 className="font-extrabold text-slate-800 text-sm">Price Simulator</h3>
       </div>
 
       {/* ── Slider ───────────────────────────────────────────────────────── */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm" style={{ color: "#94a3b8" }}>Simulated Price</span>
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Simulated Price</span>
           {/* Live price value updates as slider moves */}
-          <span className="text-xl font-bold text-white">₹{price.toFixed(2)}</span>
+          <span className="text-xl font-extrabold text-slate-800">₹{price.toFixed(2)}</span>
         </div>
         <input
           type="range"
@@ -83,24 +83,24 @@ export default function PriceSimulator({ productId, costPrice, mrp, currentPrice
           step={0.5}         // 50-paise increments feel natural for ₹ prices
           value={price}
           onChange={(e) => setPrice(parseFloat(e.target.value))}
-          className="w-full h-2 rounded-full appearance-none cursor-pointer"
-          style={{ accentColor: "#6366f1" }}
+          className="w-full h-2 rounded-full appearance-none cursor-pointer bg-slate-200"
+          style={{ accentColor: "#7c3aed" }}
         />
         {/* Min/max labels below the slider track */}
-        <div className="flex justify-between text-xs mt-1" style={{ color: "#64748b" }}>
+        <div className="flex justify-between text-xs mt-1 text-slate-400 font-semibold">
           <span>Cost ₹{costPrice.toFixed(0)}</span>
           <span>MRP ₹{mrp.toFixed(0)}</span>
         </div>
       </div>
 
       {/* ── Live margin indicator (updates on every slider drag) ─────────── */}
-      <div className="glass rounded-xl p-3 mb-4">
-        <div className="text-xs" style={{ color: "#94a3b8" }}>Estimated Margin</div>
+      <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 mb-4">
+        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Estimated Margin</div>
         <div
           className="text-lg font-bold"
           style={{
             // Colour code: green ≥ 15%, amber 5–15%, red < 5%
-            color: margin >= 15 ? "#10b981" : margin >= 5 ? "#f59e0b" : "#ef4444",
+            color: margin >= 15 ? "#10b981" : margin >= 5 ? "#d97706" : "#ef4444",
           }}
         >
           {margin.toFixed(1)}%
@@ -111,7 +111,7 @@ export default function PriceSimulator({ productId, costPrice, mrp, currentPrice
       <button
         onClick={handleSimulate}
         disabled={loading}
-        className="glow-btn w-full py-3 rounded-xl font-semibold text-white text-sm transition-all"
+        className="glow-btn w-full py-3 rounded-xl font-semibold text-white text-sm transition-all cursor-pointer"
         style={{ opacity: loading ? 0.7 : 1 }}
       >
         {loading ? "Simulating..." : "Run Simulation"}
@@ -120,11 +120,11 @@ export default function PriceSimulator({ productId, costPrice, mrp, currentPrice
       {/* Error state */}
       {error && (
         <div
-          className="mt-4 p-3 rounded-xl text-sm"
+          className="mt-4 p-3 rounded-xl text-sm font-semibold"
           style={{
-            background: "rgba(239,68,68,0.1)",
+            background: "rgba(239, 68, 68, 0.08)",
             color: "#ef4444",
-            border: "1px solid rgba(239,68,68,0.2)",
+            border: "1px solid rgba(239, 68, 68, 0.15)",
           }}
         >
           {error}
@@ -135,30 +135,30 @@ export default function PriceSimulator({ productId, costPrice, mrp, currentPrice
       {result && (
         <div className="mt-4 grid grid-cols-2 gap-3">
           {/* Predicted demand */}
-          <div className="glass rounded-xl p-3">
-            <div className="flex items-center gap-1 text-xs mb-1" style={{ color: "#94a3b8" }}>
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+            <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
               <TrendingUp size={12} /> Demand
             </div>
-            <div className="text-lg font-bold text-white">{result.expected_demand.toFixed(1)}</div>
-            <div className="text-xs" style={{ color: "#64748b" }}>units</div>
+            <div className="text-lg font-extrabold text-slate-800">{result.expected_demand.toFixed(1)}</div>
+            <div className="text-xs text-slate-400 font-semibold">units</div>
           </div>
 
           {/* Expected profit */}
-          <div className="glass rounded-xl p-3">
-            <div className="flex items-center gap-1 text-xs mb-1" style={{ color: "#94a3b8" }}>
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+            <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
               <DollarSign size={12} /> Profit
             </div>
-            <div className="text-lg font-bold" style={{ color: "#10b981" }}>
+            <div className="text-lg font-extrabold text-emerald-600">
               ₹{result.expected_profit.toFixed(0)}
             </div>
           </div>
 
           {/* Actual margin % at the simulated price */}
-          <div className="glass rounded-xl p-3 col-span-2">
-            <div className="flex items-center gap-1 text-xs mb-1" style={{ color: "#94a3b8" }}>
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 col-span-2">
+            <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
               <Percent size={12} /> Margin
             </div>
-            <div className="text-lg font-bold" style={{ color: "#6366f1" }}>
+            <div className="text-lg font-extrabold text-violet-600">
               {result.margin_pct.toFixed(1)}%
             </div>
           </div>

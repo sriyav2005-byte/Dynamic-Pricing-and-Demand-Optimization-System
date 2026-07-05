@@ -72,14 +72,14 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-1">
+          <h1 className="text-3xl font-extrabold text-slate-900 mb-1">
             <span className="gradient-text">Analytics</span>
           </h1>
-          <p className="text-sm" style={{ color: "#64748b" }}>Sales performance, trends, and inventory insights</p>
+          <p className="text-sm text-slate-500 font-medium">Sales performance, trends, and inventory insights</p>
         </div>
         <button
           onClick={load}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium glow-btn"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold glow-btn text-white cursor-pointer"
         >
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           Refresh
@@ -89,8 +89,8 @@ export default function AnalyticsPage() {
       {loading ? (
         <div className="flex items-center justify-center py-32">
           <div className="text-center">
-            <div className="w-12 h-12 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p style={{ color: "#64748b" }}>Loading analytics...</p>
+            <div className="w-12 h-12 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-sm text-slate-400 font-medium">Loading analytics...</p>
           </div>
         </div>
       ) : (
@@ -107,7 +107,7 @@ export default function AnalyticsPage() {
                   title="Total Revenue"
                   value={fmtCurrency(summary.total_revenue)}
                   icon={DollarSign}
-                  accentColor="#6366f1"
+                  accentColor="#7c3aed"
                   trend="up"
                   trendValue="Live"
                 />
@@ -143,10 +143,10 @@ export default function AnalyticsPage() {
 
           <div className="grid grid-cols-3 gap-6 mb-6">
             {/* Sales Trend */}
-            <div className="col-span-2 glass rounded-2xl p-6">
+            <div className="col-span-2 bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm">
               <div className="flex items-center gap-2 mb-5">
-                <BarChart3 size={18} style={{ color: "#6366f1" }} />
-                <h2 className="font-semibold text-white">Revenue & Profit Trend</h2>
+                <BarChart3 size={18} className="text-violet-600" />
+                <h2 className="font-extrabold text-slate-800 text-base">Revenue & Profit Trend</h2>
                 {trends.length === 0 && (
                   <span className="ml-auto badge badge-amber">No data yet — apply some recommendations!</span>
                 )}
@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
               {trends.length > 0 ? (
                 <SalesTrendChart data={trends} />
               ) : (
-                <div className="flex flex-col items-center justify-center py-16" style={{ color: "#475569" }}>
+                <div className="flex flex-col items-center justify-center py-16 text-slate-400">
                   <BarChart3 size={40} className="mb-3 opacity-30" />
                   <p className="text-sm">Sales data will appear here after applying price recommendations.</p>
                 </div>
@@ -162,10 +162,10 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Top Products */}
-            <div className="glass rounded-2xl p-6">
+            <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm">
               <div className="flex items-center gap-2 mb-5">
-                <Package size={18} style={{ color: "#22d3ee" }} />
-                <h2 className="font-semibold text-white">Top Products</h2>
+                <Package size={18} className="text-cyan-600" />
+                <h2 className="font-extrabold text-slate-800 text-base">Top Products</h2>
               </div>
               {/*
                * Leaderboard: rank badge (gold/silver/bronze) + product name
@@ -179,33 +179,34 @@ export default function AnalyticsPage() {
                       <div
                         className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
                         style={{
-                          background: `rgba(${i === 0 ? "245,158,11" : i === 1 ? "148,163,184" : "180,100,60"},0.15)`,
-                          color: i === 0 ? "#f59e0b" : i === 1 ? "#94a3b8" : "#b46c3c",
+                          background: `rgba(${i === 0 ? "245,158,11" : i === 1 ? "148,163,184" : "180,100,60"},0.12)`,
+                          color: i === 0 ? "#d97706" : i === 1 ? "#475569" : "#b46c3c",
+                          border: `1px solid rgba(${i === 0 ? "245,158,11" : i === 1 ? "148,163,184" : "180,100,60"},0.15)`
                         }}
                       >
                         {i + 1}
                       </div>
                       <div className="flex-1">
-                        <div className="text-sm font-medium text-white">Product #{p.product_id}</div>
-                        <div className="w-full h-1 rounded-full mt-1" style={{ background: "rgba(255,255,255,0.06)" }}>
+                        <div className="text-sm font-semibold text-slate-700">Product #{p.product_id}</div>
+                        <div className="w-full h-1 rounded-full mt-1 bg-slate-100">
                           <div
                             className="h-full rounded-full"
                             style={{
                               width: `${(p.total_profit / summary.top_products[0].total_profit) * 100}%`,
-                              background: "linear-gradient(90deg, #6366f1, #22d3ee)",
+                              background: "linear-gradient(90deg, #7c3aed, #22d3ee)",
                             }}
                           />
                         </div>
                       </div>
-                      <div className="text-sm font-bold" style={{ color: "#10b981" }}>
+                      <div className="text-sm font-bold text-emerald-600">
                         ₹{p.total_profit.toFixed(0)}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8" style={{ color: "#475569" }}>
-                  <Package size={32} className="mx-auto mb-2 opacity-30" />
+                <div className="text-center py-8 text-slate-400">
+                  <Package size={32} className="mx-auto mb-2 opacity-45" />
                   <p className="text-sm">No sales data yet</p>
                 </div>
               )}
@@ -214,10 +215,10 @@ export default function AnalyticsPage() {
 
           {/* Profit Breakdown Bar Chart */}
           {summary && summary.top_products.length > 0 && (
-            <div className="glass rounded-2xl p-6">
+            <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm">
               <div className="flex items-center gap-2 mb-5">
-                <TrendingUp size={18} style={{ color: "#10b981" }} />
-                <h2 className="font-semibold text-white">Profit Breakdown by Product</h2>
+                <TrendingUp size={18} className="text-emerald-500" />
+                <h2 className="font-extrabold text-slate-800 text-base">Profit Breakdown by Product</h2>
               </div>
               <ProfitBreakdownChart data={summary.top_products} />
             </div>

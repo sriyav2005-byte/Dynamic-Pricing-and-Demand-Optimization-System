@@ -44,8 +44,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       className="glass rounded-xl p-3"
       style={{ border: "1px solid rgba(99,102,241,0.3)" }}
     >
-      <p className="text-xs text-gray-400 mb-1">Product #{label}</p>
-      <p className="text-sm font-bold text-white">₹{payload[0].value.toFixed(0)}</p>
+      <p className="text-xs text-slate-500 font-bold mb-1">Product #{label}</p>
+      <p className="text-sm font-bold text-slate-800">₹{payload[0].value.toFixed(0)}</p>
     </div>
   );
 };
@@ -56,7 +56,7 @@ export default function ProfitBreakdownChart({ data }: Props) {
       <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
 
         {/* Horizontal grid lines only — vertical=false removes the clutter */}
-        <CartesianGrid stroke="rgba(255,255,255,0.04)" vertical={false} />
+        <CartesianGrid stroke="rgba(148, 163, 184, 0.12)" vertical={false} />
 
         {/* X axis: product IDs prefixed with # */}
         <XAxis

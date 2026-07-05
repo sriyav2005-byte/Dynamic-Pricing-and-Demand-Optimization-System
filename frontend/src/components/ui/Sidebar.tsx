@@ -2,24 +2,14 @@
  * components/ui/Sidebar.tsx — Fixed Navigation Sidebar
  * ======================================================
  * Renders the left-hand navigation that persists across all pages.
- * Uses Next.js `usePathname()` to highlight the active route with an
- * indigo accent border and background tint.
+ * Uses Next.js `usePathname()` to highlight the active route.
  *
- * Layout
- * ------
- * ┌─────────────────┐
- * │ Logo + Brand    │  ← gradient icon + "PriceIQ" wordmark
- * ├─────────────────┤
- * │ Nav links       │  ← Dashboard, Analytics (expandable)
- * ├─────────────────┤
- * │ Status panel    │  ← live API + ML model status indicators
- * └─────────────────┘
- *
- * Styling: glassmorphism (backdrop-filter blur) with a translucent dark
- * background so page content is visible slightly behind the sidebar.
+ * Navigation items:
+ *   Dashboard, Products, Competitors, Forecasting,
+ *   Inventory, AI Agent, Analytics
  */
 
-"use client"; // required because usePathname() is a client-side hook
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,78 +17,97 @@ import {
   LayoutDashboard,
   BarChart3,
   Cpu,
+  Package,
+  ShieldCheck,
+  TrendingUp,
+  Warehouse,
+  MessageSquare,
 } from "lucide-react";
 
-/** Navigation items — add new pages here to auto-include them in the sidebar. */
 const NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/analytics", label: "Analytics",  icon: BarChart3 },
+  { href: "/dashboard",   label: "Dashboard",    icon: LayoutDashboard },
+  { href: "/products",    label: "Products",     icon: Package },
+  { href: "/competitors", label: "Competitors",  icon: ShieldCheck },
+  { href: "/forecasting", label: "Forecasting",  icon: TrendingUp },
+  { href: "/inventory",   label: "Inventory",    icon: Warehouse },
+  { href: "/agent",       label: "AI Agent",     icon: MessageSquare },
+  { href: "/analytics",   label: "Analytics",    icon: BarChart3 },
 ];
 
 export default function Sidebar() {
-  // Track the current URL path to apply the active style to the matching nav link
   const pathname = usePathname();
 
   return (
     <aside
-      className="fixed top-0 left-0 h-screen w-64 flex flex-col"
+      className="fixed top-0 left-0 h-screen w-64 flex flex-col z-50"
       style={{
-        background: "rgba(10,15,30,0.95)",
-        borderRight: "1px solid rgba(255,255,255,0.06)",
-        backdropFilter: "blur(20px)",  // glassmorphism effect
+        background: "rgba(255, 255, 255, 0.9)",
+        borderRight: "1px solid rgba(0, 0, 0, 0.05)",
+        backdropFilter: "blur(20px)",
       }}
     >
       {/* ── Brand / Logo ─────────────────────────────────────────────────── */}
-      <div className="p-6 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+      <div className="p-6 border-b" style={{ borderColor: "rgba(0, 0, 0, 0.05)" }}>
         <div className="flex items-center gap-3">
-          {/* Gradient icon bubble */}
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center"
             style={{
-              background: "linear-gradient(135deg, #6366f1, #22d3ee)",
-              boxShadow: "0 0 24px rgba(99,102,241,0.5)",
+              background: "linear-gradient(135deg, #7c3aed, #22d3ee)",
+              boxShadow: "0 0 24px rgba(124, 58, 237, 0.3)",
             }}
           >
             <Cpu size={18} className="text-white" />
           </div>
           <div>
-            <div className="font-bold text-white text-base leading-tight">PriceIQ</div>
-            <div className="text-xs" style={{ color: "#64748b" }}>ML Pricing Engine</div>
+            <div className="font-bold text-slate-900 text-base leading-tight">PriceIQ</div>
+            <div className="text-xs" style={{ color: "#64748b" }}>Pricing Intelligence</div>
           </div>
         </div>
       </div>
 
       {/* ── Navigation links ────────────────────────────────────────────── */}
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 p-4 overflow-y-auto">
         <div
           className="mb-2 px-3 text-xs font-semibold uppercase tracking-widest"
-          style={{ color: "#475569" }}
+          style={{ color: "#94a3b8" }}
         >
           Navigation
         </div>
         <ul className="space-y-1">
           {NAV.map(({ href, label, icon: Icon }) => {
-            // A link is "active" if the pathname exactly matches or starts with its href.
-            // The second condition handles nested routes like /product/[id].
             const active = pathname === href || pathname.startsWith(href + "/");
+            const isAgent = href === "/agent";
 
             return (
               <li key={href}>
                 <Link
                   href={href}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
                   style={
                     active
                       ? {
-                          background: "rgba(99,102,241,0.15)",
-                          color: "#818cf8",
-                          borderLeft: "2px solid #6366f1", // active indicator stripe
+                          background: isAgent
+                            ? "rgba(34, 211, 238, 0.08)"
+                            : "rgba(124, 58, 237, 0.08)",
+                          color: isAgent ? "#0891b2" : "#7c3aed",
+                          borderLeft: `2px solid ${isAgent ? "#0891b2" : "#7c3aed"}`,
                         }
-                      : { color: "#94a3b8" }
+                      : { color: "#64748b" }
                   }
                 >
                   <Icon size={18} />
                   {label}
+                  {isAgent && (
+                    <span
+                      className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                      style={{
+                        background: "rgba(34, 211, 238, 0.12)",
+                        color: "#0891b2",
+                      }}
+                    >
+                      AI
+                    </span>
+                  )}
                 </Link>
               </li>
             );
@@ -107,16 +116,15 @@ export default function Sidebar() {
       </nav>
 
       {/* ── System status panel ──────────────────────────────────────────── */}
-      {/* Shows at a glance that the API is live and which ML models are active */}
-      <div className="p-4 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+      <div className="p-4 border-t" style={{ borderColor: "rgba(0, 0, 0, 0.05)" }}>
         <div className="glass rounded-xl p-3">
           <div className="flex items-center gap-2 mb-1">
-            {/* Pulsing green dot = live API connection */}
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs font-semibold text-emerald-400">API Connected</span>
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-bold text-emerald-600">API Connected</span>
           </div>
-          <div className="text-xs" style={{ color: "#64748b" }}>Thompson Sampling Active</div>
-          <div className="text-xs mt-1" style={{ color: "#64748b" }}>XGBoost v3 Model</div>
+          <div className="text-xs font-medium" style={{ color: "#475569" }}>Thompson Sampling Active</div>
+          <div className="text-xs font-medium mt-0.5" style={{ color: "#475569" }}>XGBoost v3 Model</div>
+          <div className="text-xs font-medium mt-0.5" style={{ color: "#475569" }}>4 Competitor Feeds</div>
         </div>
       </div>
     </aside>

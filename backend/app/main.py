@@ -31,6 +31,10 @@ from app.database import engine, Base
 from app.api.products import router as products_router
 from app.api.pricing import router as pricing_router
 from app.api.sales import router as sales_router
+from app.api.competitor import router as competitor_router
+from app.api.agent import router as agent_router
+from app.api.forecasting import router as forecasting_router
+from app.api.inventory import router as inventory_router
 
 
 @asynccontextmanager
@@ -54,13 +58,15 @@ async def lifespan(app: FastAPI):
 
 # ── Application instance ────────────────────────────────────────────────────
 app = FastAPI(
-    title="Dynamic Pricing & Demand Optimization API",
+    title="PriceIQ — AI-Powered Retail Pricing Intelligence Platform",
     description=(
-        "ML-powered pricing engine.\n\n"
-        "Uses XGBoost for demand prediction and Thompson Sampling "
-        "(contextual bandit) for discrete price action selection."
+        "Full-stack ML-powered pricing engine with competitor intelligence, "
+        "demand forecasting, inventory management, and conversational AI agent.\n\n"
+        "Uses XGBoost for demand prediction, Thompson Sampling "
+        "(contextual bandit) for price action selection, and simulated "
+        "competitor data from Blinkit, Zepto, Instamart, and BigBasket."
     ),
-    version="1.0.0",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -79,9 +85,13 @@ app.add_middleware(
 
 # ── Routers ──────────────────────────────────────────────────────────────────
 # Each router is a separate module grouping related endpoints.
-app.include_router(products_router)   # /products/*
-app.include_router(pricing_router)    # /pricing/recommend/* and /pricing/simulate/*
-app.include_router(sales_router)      # /update-sales, /analytics/*
+app.include_router(products_router)     # /products/*
+app.include_router(pricing_router)      # /pricing/recommend/* and /pricing/simulate/*
+app.include_router(sales_router)        # /update-sales, /analytics/*
+app.include_router(competitor_router)   # /competitor/*
+app.include_router(agent_router)        # /agent/*
+app.include_router(forecasting_router)  # /forecasting/*
+app.include_router(inventory_router)    # /inventory/*
 
 
 # ── Health check ─────────────────────────────────────────────────────────────
