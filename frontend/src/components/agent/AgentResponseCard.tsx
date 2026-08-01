@@ -8,6 +8,7 @@
 "use client";
 
 import { AlertTriangle, Tag } from "lucide-react";
+import MarketPriceCard from "@/components/agent/MarketPriceCard";
 
 interface Props {
   data: Record<string, unknown> | unknown[] | null;
@@ -16,6 +17,14 @@ interface Props {
 
 export default function AgentResponseCard({ data, dataType }: Props) {
   if (!data || !dataType) return null;
+
+  // ── Live Market Price Search ────────────────────────────────────────────────
+  if (dataType === "market_price_search") {
+    const d = data as Record<string, unknown>;
+    const query = typeof d.query === "string" ? d.query : "";
+    if (!query) return null;
+    return <MarketPriceCard query={query} />;
+  }
 
   if (dataType === "pricing") {
     const d = data as Record<string, unknown>;

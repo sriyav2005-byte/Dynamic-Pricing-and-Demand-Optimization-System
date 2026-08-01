@@ -259,5 +259,116 @@ def get_market_overview(products: list) -> list:
         data["mrp"] = p.mrp
         data["stock_level"] = p.stock_level
         data["days_to_expiry"] = p.days_to_expiry
+        data["is_live"] = False
+        data["live_fetched_at"] = None
         overview.append(data)
     return overview
+
+
+# ── Real-Time Live Scrape Competitor Functions ───────────────────────────────
+
+async def fetch_live_competitor_prices(product) -> dict:
+    """
+    Fetch live fast-commerce prices for a single product ORM object or product dict.
+    Calculates live market metrics & competitiveness scores dynamically.
+    """
+    from datetime import datetime
+    from app.services.market_scraper import search_product_prices
+
+    product_id = getattr(product, "product_id", 0)
+    category = getattr(product, "category", "grocery")
+    our_price = getattr(product, "current_price", getattr(product, "mrp", 100.0))
+    cost_price = getattr(product, "cost_price", 80.0)
+    mrp = getattr(product, "mrp", 120.0)
+    stock_level = getattr(product, "stock_level", 50)
+    days_to_expiry = getattr(product, "days_to_expiry", 15)
+
+    query = f"{category} product {product_id}"
+    # Use product attribute name if present
+    if hasattr(product, "name") and getattr(product, "name"):
+        query = getattr(product, "name")
+    elif hasattr(product, "title") and getattr(product, "title"):
+        query = getattr(product, "title")
+    else:
+        query = f"{category} {product_id}"
+
+    live_results = await search_product_prices(query)
+    now_str = datetime.now().strftime("%I:%M %p")
+
+    if not live_results:
+        # Fallback to simulated
+        base = get_competitor_prices(product_id, cost_price, mrp, category, our_price)
+        base["category"] = category
+        base["cost_price"] = cost_price
+        base["mrp"] = mrp
+        base["stock_level"] = stock_level
+        base["days_to_expiry"] = days_to_expiry
+        base["is_live"] = False
+        base["live_fetched_at"] = None
+        return base
+
+    # Map scraped live results to competitor format
+    competitors = []
+    for r in live_results:
+        diff_pct = round(((r["price"] - our_price) / our_price) * 100, 1)
+        competitors.append({
+            "platform": r["platform"],
+            "platform_key": r["platform_key"],
+            "price": r["price"],
+            "diff_pct": diff_pct,
+            "color": r["color"],
+            "url": r.get("url", "#"),
+            "unit": r.get("unit", ""),
+        })
+
+    all_prices = [c["price"] for c in competitors]
+    market_avg = round(sum(all_prices) / len(all_prices), 2)
+    cheapest = min(competitors, key=lambda c: c["price"])
+    most_expensive = max(competitors, key=lambda c: c["price"])
+
+    all_with_ours = all_prices + [our_price]
+    min_p = min(all_with_ours)
+    max_p = max(all_with_ours)
+    spread = max_p - min_p
+
+    if spread > 0:
+        score = round(100 * (1 - (our_price - min_p) / spread), 1)
+    else:
+        score = 100.0
+
+    score = max(0.0, min(100.0, score))
+
+    if our_price <= cheapest["price"]:
+        position = "cheapest"
+    elif our_price >= most_expensive["price"]:
+        position = "most_expensive"
+    elif our_price <= market_avg:
+        position = "below_average"
+    else:
+        position = "above_average"
+
+    return {
+        "product_id": product_id,
+        "our_price": our_price,
+        "competitors": competitors,
+        "market_avg": market_avg,
+        "cheapest_platform": cheapest["platform"],
+        "most_expensive_platform": most_expensive["platform"],
+        "competitiveness_score": score,
+        "price_position": position,
+        "category": category,
+        "cost_price": cost_price,
+        "mrp": mrp,
+        "stock_level": stock_level,
+        "days_to_expiry": days_to_expiry,
+        "is_live": True,
+        "live_fetched_at": now_str,
+    }
+
+
+async def fetch_all_live_market_overview(products: list) -> list:
+    """Fetch live market prices for all products in parallel."""
+    import asyncio
+    tasks = [fetch_live_competitor_prices(p) for p in products]
+    return await asyncio.gather(*tasks)
+

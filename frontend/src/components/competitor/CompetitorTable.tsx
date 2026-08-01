@@ -1,61 +1,76 @@
 /**
  * components/competitor/CompetitorTable.tsx
  * ==========================================
- * Price comparison table showing our price vs all competitor platforms.
- * Color-codes prices: green = cheapest, red = most expensive.
+ * Multi-platform price table (Blinkit, Zepto, Instamart, BigBasket, etc.).
+ *
+ * NOTE: This intentionally does NOT compare against "our price" —
+ * the current product catalog is synthetic demo data, not real
+ * products, so a price comparison against it would be meaningless.
+ * Once real product data is wired in, re-add an "Our Price" column
+ * and a diff/competitiveness comparison here.
  */
 
 "use client";
 
+import { useState } from "react";
 import { MarketOverviewItem } from "@/lib/api";
-import { ArrowDown, ArrowUp, Minus } from "lucide-react";
-
-const positionBadge: Record<string, { bg: string; color: string; label: string }> = {
-  cheapest:       { bg: "rgba(16,185,129,0.15)", color: "#10b981", label: "Cheapest" },
-  below_average:  { bg: "rgba(34,211,238,0.15)", color: "#22d3ee", label: "Below Avg" },
-  above_average:  { bg: "rgba(245,158,11,0.15)", color: "#f59e0b", label: "Above Avg" },
-  most_expensive: { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: "Expensive" },
-};
+import { ExternalLink, RefreshCw, CheckCircle2 } from "lucide-react";
 
 const fmt = (n: number) => `₹${n.toFixed(2)}`;
 
 interface Props {
   data: MarketOverviewItem[];
   onSelectProduct?: (id: number) => void;
+  onFetchLiveSingle?: (id: number) => Promise<void>;
 }
 
-export default function CompetitorTable({ data, onSelectProduct }: Props) {
+export default function CompetitorTable({ data, onSelectProduct, onFetchLiveSingle }: Props) {
+  const [loadingIds, setLoadingIds] = useState<Record<number, boolean>>({});
+
+  const handleFetchLive = async (id: number) => {
+    if (!onFetchLiveSingle) return;
+    setLoadingIds((prev) => ({ ...prev, [id]: true }));
+    try {
+      await onFetchLiveSingle(id);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingIds((prev) => ({ ...prev, [id]: false }));
+    }
+  };
+
   return (
-    <div className="glass rounded-2xl overflow-hidden">
+    <div className="glass rounded-2xl overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="data-table w-full">
           <thead>
             <tr>
               <th className="text-left">Product</th>
               <th className="text-left">Category</th>
-              <th className="text-right">Our Price</th>
-              <th className="text-right">Blinkit</th>
-              <th className="text-right">Zepto</th>
-              <th className="text-right">Instamart</th>
-              <th className="text-right">BigBasket</th>
-              <th className="text-right">Mkt Avg</th>
-              <th className="text-center">Score</th>
-              <th className="text-center">Position</th>
+              <th className="text-right">⚡ Blinkit</th>
+              <th className="text-right">🟣 Zepto</th>
+              <th className="text-right">🛒 Instamart</th>
+              <th className="text-right">🧺 BigBasket</th>
+              <th className="text-right">Market Avg</th>
+              <th className="text-center">Cheapest On</th>
+              <th className="text-center">Real-Time</th>
             </tr>
           </thead>
           <tbody>
             {data.map((item) => {
-              const badge = positionBadge[item.price_position] || positionBadge.above_average;
-
-              // Find each platform price
-              const prices: Record<string, number> = {};
+              // Find each platform price and URL
+              const platformMap: Record<string, { price: number; url?: string; unit?: string }> = {};
               item.competitors.forEach((c) => {
-                prices[c.platform_key] = c.price;
+                const normKey = c.platform.toLowerCase();
+                if (normKey.includes("blinkit")) platformMap["blinkit"] = { price: c.price, url: c.url, unit: c.unit };
+                else if (normKey.includes("zepto")) platformMap["zepto"] = { price: c.price, url: c.url, unit: c.unit };
+                else if (normKey.includes("instamart") || normKey.includes("swiggy")) platformMap["instamart"] = { price: c.price, url: c.url, unit: c.unit };
+                else if (normKey.includes("bigbasket")) platformMap["bigbasket"] = { price: c.price, url: c.url, unit: c.unit };
               });
 
-              const allPrices = [...item.competitors.map((c) => c.price), item.our_price];
-              const minPrice = Math.min(...allPrices);
-              const maxPrice = Math.max(...allPrices);
+              const platformPrices = item.competitors.map((c) => c.price).filter((p) => p > 0);
+              const minPrice = platformPrices.length ? Math.min(...platformPrices) : 0;
+              const maxPrice = platformPrices.length ? Math.max(...platformPrices) : 0;
 
               const cellColor = (price: number) => {
                 if (price === minPrice) return "#10b981";
@@ -63,71 +78,79 @@ export default function CompetitorTable({ data, onSelectProduct }: Props) {
                 return "#1e293b";
               };
 
+              const isRowLoading = loadingIds[item.product_id] || false;
+
               return (
-                <tr key={item.product_id}>
+                <tr key={item.product_id} className="hover:bg-slate-50/50 transition-colors">
                   <td>
-                    <button
-                      onClick={() => onSelectProduct?.(item.product_id)}
-                      className="font-semibold text-slate-800 hover:text-violet-600 transition-colors cursor-pointer"
-                    >
-                      #{item.product_id}
-                    </button>
+                    <div className="flex flex-col">
+                      <button
+                        onClick={() => onSelectProduct?.(item.product_id)}
+                        className="font-bold text-slate-800 hover:text-violet-600 transition-colors cursor-pointer text-left"
+                      >
+                        Product #{item.product_id}
+                      </button>
+                      {item.is_live && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 font-medium">
+                          <CheckCircle2 size={10} />
+                          Estimated {item.live_fetched_at || ""}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td>
                     <span className="badge badge-blue capitalize">{item.category}</span>
                   </td>
-                  <td className="text-right font-bold" style={{ color: cellColor(item.our_price) }}>
-                    {fmt(item.our_price)}
-                  </td>
-                  {["Blinkit", "Zepto", "Instamart", "BigBasket"].map((key) => {
-                    const price = prices[key] ?? 0;
-                    const diff = ((price - item.our_price) / item.our_price) * 100;
+
+                  {["blinkit", "zepto", "instamart", "bigbasket"].map((key) => {
+                    const info = platformMap[key];
+                    const price = info?.price ?? 0;
+
                     return (
                       <td key={key} className="text-right">
-                        <div className="flex flex-col items-end">
-                          <span className="font-semibold" style={{ color: cellColor(price) }}>{fmt(price)}</span>
-                          <span
-                            className="text-xs flex items-center gap-0.5"
-                            style={{ color: diff > 0 ? "#10b981" : diff < 0 ? "#ef4444" : "#64748b" }}
-                          >
-                            {diff > 0.5 ? <ArrowUp size={10} /> : diff < -0.5 ? <ArrowDown size={10} /> : <Minus size={10} />}
-                            {Math.abs(diff).toFixed(1)}%
-                          </span>
-                        </div>
+                        {price > 0 ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="font-semibold" style={{ color: cellColor(price) }}>{fmt(price)}</span>
+                            {info?.url && info.url !== "#" && (
+                              <a
+                                href={info.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="View on store"
+                                className="text-slate-400 hover:text-violet-600 transition-colors"
+                              >
+                                <ExternalLink size={10} />
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-300">—</span>
+                        )}
                       </td>
                     );
                   })}
-                  <td className="text-right text-slate-500 font-semibold">
+
+                  <td className="text-right text-slate-600 font-semibold">
                     {fmt(item.market_avg)}
                   </td>
                   <td className="text-center">
-                    <div
-                      className="inline-flex items-center justify-center w-10 h-10 rounded-full text-xs font-bold"
-                      style={{
-                        background:
-                          item.competitiveness_score >= 70
-                            ? "rgba(16,185,129,0.15)"
-                            : item.competitiveness_score >= 40
-                            ? "rgba(245,158,11,0.15)"
-                            : "rgba(239,68,68,0.15)",
-                        color:
-                          item.competitiveness_score >= 70
-                            ? "#10b981"
-                            : item.competitiveness_score >= 40
-                            ? "#f59e0b"
-                            : "#ef4444",
-                      }}
-                    >
-                      {Math.round(item.competitiveness_score)}
-                    </div>
+                    <span className="badge badge-blue">{item.cheapest_platform}</span>
                   </td>
                   <td className="text-center">
-                    <span
-                      className="badge"
-                      style={{ background: badge.bg, color: badge.color }}
+                    <button
+                      onClick={() => handleFetchLive(item.product_id)}
+                      disabled={isRowLoading}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all hover:scale-[1.03] active:scale-95 cursor-pointer disabled:opacity-50"
+                      style={{
+                        background: item.is_live ? "rgba(16,185,129,0.08)" : "rgba(124,58,237,0.08)",
+                        border: item.is_live ? "1px solid rgba(16,185,129,0.2)" : "1px solid rgba(124,58,237,0.2)",
+                        color: item.is_live ? "#10b981" : "#7c3aed",
+                      }}
+                      title="Refresh estimated prices"
                     >
-                      {badge.label}
-                    </span>
+                      <RefreshCw size={10} className={isRowLoading ? "animate-spin" : ""} />
+                      {isRowLoading ? "Updating..." : item.is_live ? "Refetched" : "Fetch Live"}
+                    </button>
                   </td>
                 </tr>
               );

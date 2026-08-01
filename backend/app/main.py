@@ -32,6 +32,7 @@ from app.api.products import router as products_router
 from app.api.pricing import router as pricing_router
 from app.api.sales import router as sales_router
 from app.api.competitor import router as competitor_router
+from app.api.competitors import router as competitors_router  # standalone search — no DB/ML dependency
 from app.api.agent import router as agent_router
 from app.api.forecasting import router as forecasting_router
 from app.api.inventory import router as inventory_router
@@ -66,7 +67,7 @@ app = FastAPI(
         "(contextual bandit) for price action selection, and simulated "
         "competitor data from Blinkit, Zepto, Instamart, and BigBasket."
     ),
-    version="2.0.0",
+    version="4.0.0",
     lifespan=lifespan,
 )
 
@@ -88,7 +89,8 @@ app.add_middleware(
 app.include_router(products_router)     # /products/*
 app.include_router(pricing_router)      # /pricing/recommend/* and /pricing/simulate/*
 app.include_router(sales_router)        # /update-sales, /analytics/*
-app.include_router(competitor_router)   # /competitor/*
+app.include_router(competitor_router)   # /competitor/*  (synthetic DB products)
+app.include_router(competitors_router)  # /competitors/* (standalone real-product search)
 app.include_router(agent_router)        # /agent/*
 app.include_router(forecasting_router)  # /forecasting/*
 app.include_router(inventory_router)    # /inventory/*

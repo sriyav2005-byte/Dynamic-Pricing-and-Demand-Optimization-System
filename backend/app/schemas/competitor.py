@@ -10,6 +10,8 @@ class CompetitorPrice(BaseModel):
     price: float
     diff_pct: float
     color: str
+    url: Optional[str] = "#"
+    unit: Optional[str] = ""
 
 
 class CompetitorPriceResponse(BaseModel):
@@ -21,6 +23,8 @@ class CompetitorPriceResponse(BaseModel):
     most_expensive_platform: str
     competitiveness_score: float
     price_position: str
+    is_live: Optional[bool] = False
+    live_fetched_at: Optional[str] = None
 
 
 class MarketOverviewItem(BaseModel):
@@ -37,6 +41,8 @@ class MarketOverviewItem(BaseModel):
     mrp: float
     stock_level: int
     days_to_expiry: int
+    is_live: Optional[bool] = False
+    live_fetched_at: Optional[str] = None
 
 
 class PricingStrategyResponse(BaseModel):
@@ -49,3 +55,21 @@ class PricingStrategyResponse(BaseModel):
     reason: str
     impact_pct: float
     competitors: List[CompetitorPrice]
+
+
+class LiveFetchRequest(BaseModel):
+    product_id: Optional[int] = None
+    query: Optional[str] = None
+
+
+class LiveFetchResponse(BaseModel):
+    query: str
+    product_id: Optional[int] = None
+    our_price: Optional[float] = None
+    market_avg: float
+    cheapest_platform: str
+    cheapest_price: float
+    competitiveness_score: float
+    price_position: str
+    results: List[dict]
+    fetched_at: str

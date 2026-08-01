@@ -28,6 +28,8 @@ import {
   HelpCircle,
   TrendingUp,
   AlertTriangle,
+  Search,
+  Zap,
 } from "lucide-react";
 
 interface Message {
@@ -47,6 +49,7 @@ const iconMap: Record<string, React.ReactNode> = {
   help: <HelpCircle size={12} />,
   trending: <TrendingUp size={12} />,
   alert: <AlertTriangle size={12} />,
+  search: <Search size={12} />,
 };
 
 export default function AgentPage() {
@@ -54,6 +57,7 @@ export default function AgentPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestedQuestion[]>([]);
+  const [searchMode, setSearchMode] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -75,16 +79,18 @@ export default function AgentPage() {
           content:
             "👋 **Hello! I'm your PriceIQ AI Assistant.**\n\n" +
             "I can help you with pricing decisions, discount strategies, " +
-            "competitor analysis, and inventory management. " +
+            "competitor analysis, inventory management, and **live real-time " +
+            "prices from Blinkit, Zepto, Instamart, BigBasket & Amazon**. " +
             "Ask me anything or pick a suggestion below!",
           timestamp: new Date().toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
           }),
           suggestions: [
+            "Price of tata salt 1kg",
             "Which products should be discounted today?",
+            "How much is amul butter 500g on zepto?",
             "What products are at expiry risk?",
-            "How does my pricing compare with competitors?",
           ],
         },
       ]);
@@ -98,19 +104,26 @@ export default function AgentPage() {
 
   const handleSend = useCallback(
     async (text?: string) => {
-      const msg = (text || input).trim();
+      let msg = (text || input).trim();
       if (!msg || sending) return;
+
+      // In live search mode, ensure the message routes to market_price_search intent
+      const marketKeywords = ["price of", "how much", "live price", "market price", "current price", "check price", "find price"];
+      const hasMarketKeyword = marketKeywords.some((kw) => msg.toLowerCase().includes(kw));
+      if (searchMode && !hasMarketKeyword) {
+        msg = `price of ${msg}`;
+      }
 
       const time = new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       });
 
-      // Add user message
+      // Add user message (show original, not modified query)
       const userMsg: Message = {
         id: `user-${Date.now()}`,
         role: "user",
-        content: msg,
+        content: text || input.trim(),
         timestamp: time,
       };
       setMessages((prev) => [...prev, userMsg]);
@@ -151,7 +164,7 @@ export default function AgentPage() {
         inputRef.current?.focus();
       }
     },
-    [input, sending]
+    [input, sending, searchMode]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -180,15 +193,36 @@ export default function AgentPage() {
           >
             <Bot size={20} className="text-white" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
               PriceIQ Agent
               <Sparkles size={16} className="text-[#22d3ee]" />
             </h1>
             <p className="text-xs font-semibold text-slate-400">
-              AI-powered pricing advisor · Ask about pricing, inventory, and competitors
+              AI-powered pricing advisor · Live market prices · Competitor intelligence
             </p>
           </div>
+          {/* Live Search Mode Toggle */}
+          <button
+            onClick={() => {
+              setSearchMode((prev) => !prev);
+              inputRef.current?.focus();
+            }}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
+            style={{
+              background: searchMode
+                ? "linear-gradient(135deg, #7c3aed, #22d3ee)"
+                : "rgba(124,58,237,0.08)",
+              border: searchMode
+                ? "none"
+                : "1px solid rgba(124,58,237,0.2)",
+              color: searchMode ? "#fff" : "#7c3aed",
+              boxShadow: searchMode ? "0 4px 14px rgba(124,58,237,0.3)" : "none",
+            }}
+          >
+            {searchMode ? <Zap size={12} /> : <Search size={12} />}
+            {searchMode ? "Live Search ON" : "Live Market Search"}
+          </button>
         </div>
       </div>
 
@@ -309,20 +343,45 @@ export default function AgentPage() {
 
       {/* Input Area */}
       <div className="p-4 border-t bg-white" style={{ borderColor: "rgba(0, 0, 0, 0.05)" }}>
+        {/* Search mode indicator */}
+        {searchMode && (
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg mb-2 text-xs font-semibold"
+            style={{
+              background: "linear-gradient(135deg,rgba(124,58,237,0.08),rgba(34,211,238,0.06))",
+              border: "1px solid rgba(124,58,237,0.12)",
+              color: "#7c3aed",
+            }}
+          >
+            <Zap size={11} />
+            Live Market Search active — type any product name to get real-time prices
+          </div>
+        )}
         <div
           className="flex items-center gap-3 rounded-2xl px-4 py-3"
           style={{
-            background: "#ffffff",
-            border: "1px solid rgba(0, 0, 0, 0.08)",
+            background: searchMode
+              ? "linear-gradient(135deg,rgba(124,58,237,0.04),rgba(34,211,238,0.04))"
+              : "#ffffff",
+            border: searchMode
+              ? "1.5px solid rgba(124,58,237,0.2)"
+              : "1px solid rgba(0, 0, 0, 0.08)",
           }}
         >
+          {searchMode && (
+            <Search size={14} className="flex-shrink-0" style={{ color: "#7c3aed" }} />
+          )}
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about pricing, discounts, competitors, or inventory..."
+            placeholder={
+              searchMode
+                ? "Search any product for live prices (e.g. amul butter 500g)..."
+                : "Ask about pricing, discounts, competitors, or inventory..."
+            }
             className="flex-1 bg-transparent outline-none text-sm text-slate-800 placeholder-slate-400"
             disabled={sending}
           />
@@ -344,7 +403,9 @@ export default function AgentPage() {
         </div>
         <div className="text-center mt-2.5">
           <span className="text-[10px] font-bold text-slate-400">
-            Powered by PriceIQ ML Engine · Thompson Sampling + XGBoost
+            {searchMode
+              ? "Powered by PriceIQ Live Scraper · Blinkit · Zepto · Instamart · BigBasket · Amazon"
+              : "Powered by PriceIQ ML Engine · Thompson Sampling + XGBoost"}
           </span>
         </div>
       </div>

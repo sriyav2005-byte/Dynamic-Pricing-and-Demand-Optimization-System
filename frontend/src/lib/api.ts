@@ -116,6 +116,8 @@ export interface CompetitorPrice {
   price: number;
   diff_pct: number;
   color: string;
+  url?: string;
+  unit?: string;
 }
 
 export interface CompetitorPriceResponse {
@@ -127,6 +129,8 @@ export interface CompetitorPriceResponse {
   most_expensive_platform: string;
   competitiveness_score: number;
   price_position: string;
+  is_live?: boolean;
+  live_fetched_at?: string | null;
 }
 
 export interface MarketOverviewItem extends CompetitorPriceResponse {
@@ -135,6 +139,8 @@ export interface MarketOverviewItem extends CompetitorPriceResponse {
   mrp: number;
   stock_level: number;
   days_to_expiry: number;
+  is_live?: boolean;
+  live_fetched_at?: string | null;
 }
 
 export interface PricingStrategy {
@@ -164,6 +170,32 @@ export interface SuggestedQuestion {
   text: string;
   category: string;
   icon: string;
+}
+
+// ── Market Price Search ───────────────────────────────────────────────────────
+
+/** A single platform price result from the live market scraper. */
+export interface MarketPriceResult {
+  platform: string;
+  platform_key: string;
+  price: number;
+  unit: string;
+  title: string;
+  url: string;
+  color: string;
+  bg: string;
+  emoji: string;
+  source: string;
+  is_cheapest?: boolean;
+}
+
+/** Full response from POST /agent/market-price. */
+export interface MarketPriceResponse {
+  query: string;
+  results: MarketPriceResult[];
+  platform_count: number;
+  cheapest_platform: string | null;
+  cheapest_price: number | null;
 }
 
 // ── Demand Forecasting ───────────────────────────────────────────────────────
@@ -297,8 +329,29 @@ export const getCompetitorPrices = (id: number) =>
     .get<CompetitorPriceResponse>(`/competitor/prices/${id}`)
     .then((r) => r.data);
 
-export const getMarketOverview = () =>
-  api.get<MarketOverviewItem[]>("/competitor/market-overview").then((r) => r.data);
+export const getMarketOverview = (live: boolean = false) =>
+  api
+    .get<MarketOverviewItem[]>("/competitor/market-overview", {
+      params: { live },
+    })
+    .then((r) => r.data);
+
+export const fetchLiveProductPrices = (id: number) =>
+  api
+    .post<MarketOverviewItem>(`/competitor/fetch-live/${id}`)
+    .then((r) => r.data);
+
+export const searchLiveCompetitorPrices = (query: string) =>
+  api
+    .post<{
+      query: string;
+      market_avg: number;
+      cheapest_platform: string;
+      cheapest_price: number;
+      results: MarketPriceResult[];
+      fetched_at: string;
+    }>("/competitor/live-search", { query })
+    .then((r) => r.data);
 
 export const getCompetitorStrategy = (id: number) =>
   api
@@ -314,6 +367,17 @@ export const sendChatMessage = (message: string) =>
 
 export const getAgentSuggestions = () =>
   api.get<SuggestedQuestion[]>("/agent/suggestions").then((r) => r.data);
+
+
+
+/**
+ * Fetch real-time product prices from quick-commerce platforms.
+ * Calls POST /agent/market-price with the product search query.
+ */
+export const searchMarketPrices = (query: string) =>
+  api
+    .post<MarketPriceResponse>("/agent/market-price", { query })
+    .then((r) => r.data);
 
 // ── Demand Forecasting ───────────────────────────────────────────────────────
 

@@ -33,6 +33,19 @@ from app.services.forecasting_service import generate_forecast
 # ── Intent patterns ──────────────────────────────────────────────────────────
 INTENT_PATTERNS = [
     {
+        "intent": "market_price_search",
+        "keywords": [
+            "price of", "how much is", "how much does", "current price",
+            "live price", "real time price", "real-time price",
+            "check price", "market price", "compare prices",
+            "price on zepto", "price on blinkit", "price on amazon",
+            "price on instamart", "price on bigbasket", "zepto price",
+            "blinkit price", "amazon price", "search product",
+            "find price", "look up price", "fetch price",
+        ],
+        "min_match": 1,
+    },
+    {
         "intent": "pricing_explanation",
         "keywords": ["why", "recommend", "price", "explanation", "explain", "reasoning",
                      "how did you", "how was", "logic", "justified"],
@@ -105,6 +118,37 @@ def _extract_product_id(message: str) -> Optional[int]:
         if match:
             return int(match.group(1))
     return None
+
+
+def _extract_product_name(message: str) -> str:
+    """
+    Extract a clean product name from a market-search message.
+
+    Strips leading intent keywords so the query sent to the scraper
+    is just the product name (e.g. "tata salt 1kg").
+    """
+    import re
+    # Remove common leading phrases
+    msg = message.strip()
+    prefixes = [
+        r"^(what is the |what's the |what are the )?price of ",
+        r"^(how much is |how much does )([a-z ]+cost on |[a-z ]+ cost )?",
+        r"^(current|live|real.?time|latest|today'?s?) price (of |for )?",
+        r"^(check|fetch|find|get|look up|search|show|tell me) (the )?price (of |for )?",
+        r"^(market price of |compare prices (of |for )?)?",
+        r"^(price on |prices on |zepto price of |blinkit price of |amazon price of )",
+        r"^(search|find|look up|check) (product |for )?",
+    ]
+    for prefix in prefixes:
+        msg = re.sub(prefix, "", msg, flags=re.IGNORECASE).strip()
+
+    # Remove trailing platform qualifiers
+    msg = re.sub(
+        r"\s+(on|from|at|in)\s+(zepto|blinkit|amazon|instamart|bigbasket|flipkart|jiomart).*$",
+        "", msg, flags=re.IGNORECASE
+    ).strip()
+
+    return msg if msg else message.strip()
 
 
 def process_message(message: str, db: Session) -> dict:
@@ -581,6 +625,37 @@ def _handle_help(message: str, db: Session,
     }
 
 
+def _handle_market_price_search(message: str, db: Session,
+                                product_id: Optional[int]) -> dict:
+    """
+    Handle real-time market price search queries.
+
+    Extracts the product name from the message and delegates scraping
+    to the frontend via a special data_type='market_price_search' signal.
+    The actual async scraping is done by POST /agent/market-price;
+    this handler returns a response that triggers the frontend to call
+    that endpoint with the extracted query.
+    """
+    product_name = _extract_product_name(message)
+
+    return {
+        "intent": "market_price_search",
+        "response_text": (
+            f"🔍 **Searching live prices for \"{ product_name }\"...**\n\n"
+            f"Fetching real-time prices from Blinkit, Zepto, Swiggy Instamart, "
+            f"BigBasket, Amazon, and more. This may take a few seconds."
+        ),
+        "data": {"query": product_name},
+        "data_type": "market_price_search",
+        "confidence": 0.95,
+        "suggestions": [
+            f"Price of amul butter 500g",
+            f"How much is tata salt 1kg on blinkit?",
+            "Which products should be discounted today?",
+        ],
+    }
+
+
 def _handle_fallback(message: str, db: Session,
                       product_id: Optional[int]) -> dict:
     """Handle unrecognised queries."""
@@ -589,6 +664,7 @@ def _handle_fallback(message: str, db: Session,
         "response_text": (
             "🤔 I'm not sure I understand that question. "
             "I can help with:\n\n"
+            "• **Live Prices** — \"Price of tata salt 1kg\"\n"
             "• **Pricing** — \"Why was this price recommended?\"\n"
             "• **Discounts** — \"Which products should be discounted?\"\n"
             "• **Expiry** — \"What products are at expiry risk?\"\n"
@@ -600,9 +676,9 @@ def _handle_fallback(message: str, db: Session,
         "data_type": None,
         "confidence": 0.3,
         "suggestions": [
+            "Price of amul milk 1 litre",
             "Which products should be discounted today?",
             "What products are at expiry risk?",
-            "How does my pricing compare with competitors?",
         ],
     }
 
@@ -665,6 +741,7 @@ def get_suggested_questions(db: Session) -> list:
 
 # ── Intent → Handler mapping ─────────────────────────────────────────────────
 INTENT_HANDLERS = {
+    "market_price_search": _handle_market_price_search,
     "pricing_explanation": _handle_pricing_explanation,
     "discount_suggestions": _handle_discount_suggestions,
     "expiry_risk": _handle_expiry_risk,

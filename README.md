@@ -1,4 +1,4 @@
-# PriceIQ — Dynamic Pricing & Demand Optimization System
+# PriceIQ — Dynamic Pricing & Demand Optimization System &nbsp;`v4.0`
 
 A full-stack ML-powered pricing engine for retail stores. Recommends optimal product prices using **XGBoost demand prediction** and a **Thompson Sampling contextual bandit**, with a real-time Next.js dashboard.
 

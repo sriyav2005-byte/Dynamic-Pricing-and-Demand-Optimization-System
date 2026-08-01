@@ -21,3 +21,34 @@ class SuggestedQuestion(BaseModel):
     text: str
     category: str
     icon: str
+
+
+# ── Market Price Search ───────────────────────────────────────────────────────
+
+class MarketPriceQuery(BaseModel):
+    """Request body for the market-price search endpoint."""
+    query: str
+
+
+class MarketPriceResult(BaseModel):
+    """A single platform price result."""
+    platform: str
+    platform_key: str
+    price: float
+    unit: str
+    title: str
+    url: str
+    color: str
+    bg: str
+    emoji: str
+    source: str
+    is_cheapest: Optional[bool] = False
+
+
+class MarketPriceResponse(BaseModel):
+    """Response from the market-price search endpoint."""
+    query: str
+    results: List[MarketPriceResult]
+    platform_count: int
+    cheapest_platform: Optional[str] = None
+    cheapest_price: Optional[float] = None
