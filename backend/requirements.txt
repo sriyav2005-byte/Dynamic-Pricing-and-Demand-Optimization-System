@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic
+pydantic-settings
+xgboost
+scikit-learn
+pandas
+numpy
+python-dotenv
+httpx
+aiofiles
+beautifulsoup4
+lxml
