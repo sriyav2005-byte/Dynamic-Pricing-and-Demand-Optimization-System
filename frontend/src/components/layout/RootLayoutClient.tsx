@@ -2,6 +2,9 @@
 
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/ui/Sidebar";
+import AuthGuard from "@/components/layout/AuthGuard";
+
+const PUBLIC_PATHS = ["/", "/login"];
 
 export default function RootLayoutClient({
   children,
@@ -9,14 +12,22 @@ export default function RootLayoutClient({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isLandingPage = pathname === "/";
+  const isPublic = PUBLIC_PATHS.includes(pathname);
 
+  if (isPublic) {
+    // Public pages (landing + login) — no sidebar, no auth check
+    return <>{children}</>;
+  }
+
+  // Protected pages — verify session, then show sidebar + content
   return (
-    <div className="flex min-h-screen">
-      {!isLandingPage && <Sidebar />}
-      <main className={`flex-1 min-h-screen transition-all duration-300 ${isLandingPage ? "ml-0" : "ml-64"}`}>
-        {children}
-      </main>
-    </div>
+    <AuthGuard>
+      <div className="flex min-h-screen">
+        <Sidebar />
+        <main className="flex-1 min-h-screen transition-all duration-300 ml-64">
+          {children}
+        </main>
+      </div>
+    </AuthGuard>
   );
 }

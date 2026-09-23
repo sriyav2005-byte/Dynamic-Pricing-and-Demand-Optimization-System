@@ -138,7 +138,7 @@ export default function Home() {
 
           {/* Action Button */}
           <button 
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/login")}
             className="bg-gradient-to-r from-violet-600 to-[#9061f9] text-white font-semibold text-sm px-6 py-2.5 rounded-full shadow-[0_4px_14px_rgba(124,58,237,0.3)] hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer"
           >
             Join With Us
@@ -170,7 +170,7 @@ export default function Home() {
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center gap-4 mb-20 z-10">
           <button 
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/login")}
             className="w-full sm:w-auto bg-gradient-to-r from-violet-600 to-[#9061f9] text-white font-bold text-sm px-8 py-3.5 rounded-full shadow-[0_6px_20px_rgba(124,58,237,0.35)] hover:shadow-[0_8px_24px_rgba(124,58,237,0.45)] hover:translate-y-[-1px] transition-all cursor-pointer"
           >
             Get Started
