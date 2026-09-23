@@ -102,7 +102,7 @@ class ThompsonBandit:
         and arm 9 is always the most expensive allowed price.
         """
         low = cost * 1.05
-        return list(np.linspace(low, mrp, self.NUM_ARMS))
+        return [float(round(p, 2)) for p in np.linspace(low, mrp, self.NUM_ARMS)]
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -133,7 +133,7 @@ class ThompsonBandit:
 
         # Choose the arm with the highest sampled value (optimistic selection)
         best_arm = int(np.argmax(samples))
-        return best_arm, arms[best_arm]
+        return best_arm, float(arms[best_arm])
 
     def get_all_arms(self, product_id: int, cost: float, mrp: float) -> List[dict]:
         """
@@ -154,8 +154,8 @@ class ThompsonBandit:
             expected = a / (a + b)
             result.append({
                 "arm": i,
-                "price": round(price, 2),
-                "expected_reward": round(expected, 4),
+                "price": round(float(price), 2),
+                "expected_reward": round(float(expected), 4),
             })
         return result
 
@@ -178,11 +178,14 @@ class ThompsonBandit:
         pid = str(product_id)
         self._init_product(pid)
 
-        # Clip reward to valid [0, 1] range
-        r = min(1.0, max(0.0, reward))
+        # Clamp arm_idx to valid range [0, NUM_ARMS - 1]
+        arm_idx = max(0, min(self.NUM_ARMS - 1, int(arm_idx)))
 
-        self.alpha[pid][arm_idx] += r
-        self.beta_[pid][arm_idx] += (1 - r)
+        # Clip reward to valid [0, 1] range
+        r = float(min(1.0, max(0.0, reward)))
+
+        self.alpha[pid][arm_idx] = float(self.alpha[pid][arm_idx] + r)
+        self.beta_[pid][arm_idx] = float(self.beta_[pid][arm_idx] + (1.0 - r))
 
         # Persist state so it survives a server restart
         self._save()

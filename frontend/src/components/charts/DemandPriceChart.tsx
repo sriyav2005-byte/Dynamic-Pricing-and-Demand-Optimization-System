@@ -75,7 +75,7 @@ export default function DemandPriceChart({ options, currentPrice, recommendedPri
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={300} minWidth={0}>
       <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
 
         {/* Faint horizontal grid lines only (no vertical) for a cleaner look */}

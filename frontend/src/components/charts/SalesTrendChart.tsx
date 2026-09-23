@@ -66,7 +66,7 @@ export default function SalesTrendChart({ data }: Props) {
      * ResponsiveContainer makes the SVG fill its parent's width automatically.
      * Height is fixed at 300px — adjust in the parent if needed.
      */
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={300} minWidth={0}>
       <AreaChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
 
         {/* ── SVG gradient definitions ────────────────────────────────── */}

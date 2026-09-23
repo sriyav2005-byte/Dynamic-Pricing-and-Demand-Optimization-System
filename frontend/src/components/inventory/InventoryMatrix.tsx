@@ -48,7 +48,7 @@ export default function InventoryMatrix({ products, height = 400 }: Props) {
 
   return (
     <div className="glass rounded-2xl p-6">
-      <ResponsiveContainer width="100%" height={height}>
+      <ResponsiveContainer width="100%" height={height} minWidth={0}>
         <ScatterChart margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.12)" />
 

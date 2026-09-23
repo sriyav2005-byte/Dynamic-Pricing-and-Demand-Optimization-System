@@ -52,7 +52,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function ProfitBreakdownChart({ data }: Props) {
   return (
-    <ResponsiveContainer width="100%" height={250}>
+    <ResponsiveContainer width="100%" height={250} minWidth={0}>
       <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
 
         {/* Horizontal grid lines only — vertical=false removes the clutter */}

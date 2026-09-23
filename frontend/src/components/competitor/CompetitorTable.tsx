@@ -60,7 +60,7 @@ export default function CompetitorTable({ data, onSelectProduct }: Props) {
               const cellColor = (price: number) => {
                 if (price === minPrice) return "#10b981";
                 if (price === maxPrice) return "#ef4444";
-                return "#1e293b";
+                return "inherit";
               };
 
               return (
@@ -80,20 +80,30 @@ export default function CompetitorTable({ data, onSelectProduct }: Props) {
                     {fmt(item.our_price)}
                   </td>
                   {["Blinkit", "Zepto", "Instamart", "BigBasket"].map((key) => {
-                    const price = prices[key] ?? 0;
-                    const diff = ((price - item.our_price) / item.our_price) * 100;
+                    const price = prices[key];
+                    const hasPrice = typeof price === "number" && price > 0;
+                    const diff =
+                      hasPrice && item.our_price > 0
+                        ? ((price - item.our_price) / item.our_price) * 100
+                        : 0;
                     return (
                       <td key={key} className="text-right">
-                        <div className="flex flex-col items-end">
-                          <span className="font-semibold" style={{ color: cellColor(price) }}>{fmt(price)}</span>
-                          <span
-                            className="text-xs flex items-center gap-0.5"
-                            style={{ color: diff > 0 ? "#10b981" : diff < 0 ? "#ef4444" : "#64748b" }}
-                          >
-                            {diff > 0.5 ? <ArrowUp size={10} /> : diff < -0.5 ? <ArrowDown size={10} /> : <Minus size={10} />}
-                            {Math.abs(diff).toFixed(1)}%
-                          </span>
-                        </div>
+                        {hasPrice ? (
+                          <div className="flex flex-col items-end">
+                            <span className="font-semibold" style={{ color: cellColor(price) }}>
+                              {fmt(price)}
+                            </span>
+                            <span
+                              className="text-xs flex items-center gap-0.5"
+                              style={{ color: diff > 0 ? "#10b981" : diff < 0 ? "#ef4444" : "#64748b" }}
+                            >
+                              {diff > 0.5 ? <ArrowUp size={10} /> : diff < -0.5 ? <ArrowDown size={10} /> : <Minus size={10} />}
+                              {Math.abs(diff).toFixed(1)}%
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
                       </td>
                     );
                   })}

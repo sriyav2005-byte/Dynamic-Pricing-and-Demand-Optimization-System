@@ -30,7 +30,7 @@ export default function CompetitivenessGauge({ score, size = 120, label }: Props
   return (
     <div className="flex flex-col items-center">
       <div style={{ width: size, height: size, position: "relative" }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <RadialBarChart
             cx="50%"
             cy="50%"

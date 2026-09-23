@@ -87,7 +87,7 @@ def recommend_price(
 
     # Constraint D — Hard MRP cap
     candidate_price = min(candidate_price, mrp)
-    candidate_price = round(candidate_price, 2)
+    candidate_price = float(round(candidate_price, 2))
 
     # ── Step 3: Predict demand at the recommended price ──────────────────────
     expected_demand = predictor.predict(
@@ -107,7 +107,7 @@ def recommend_price(
     # ── Step 5: Evaluate all 10 arms for the frontend demand-price chart ─────
     all_arms = bandit.get_all_arms(product_id, cost_price, mrp)
     for arm in all_arms:
-        p = arm["price"]
+        p = float(arm["price"])
         d = predictor.predict(
             product_id=product_id,
             category=category,
@@ -118,15 +118,16 @@ def recommend_price(
             days_to_expiry=days_to_expiry,
             season_factor=season_factor,
         )
-        arm["predicted_demand"] = round(d, 2)
-        arm["predicted_profit"] = round((p - cost_price) * d, 2)
+        arm["price"] = float(round(p, 2))
+        arm["predicted_demand"] = float(round(d, 2))
+        arm["predicted_profit"] = float(round((p - cost_price) * d, 2))
 
     return {
         "product_id": product_id,
-        "current_price": current_price,
+        "current_price": float(current_price),
         "recommended_price": candidate_price,
-        "expected_demand": round(expected_demand, 2),
-        "expected_profit": round(expected_profit, 2),
+        "expected_demand": float(round(expected_demand, 2)),
+        "expected_profit": float(round(expected_profit, 2)),
         "price_options": all_arms,
         "constraint_applied": constraint_applied,
     }
@@ -168,12 +169,16 @@ def simulate_price(
     )
 
     profit = (simulated_price - cost_price) * expected_demand
-    margin_pct = ((simulated_price - cost_price) / cost_price) * 100
+    margin_pct = (
+        ((simulated_price - cost_price) / cost_price) * 100
+        if cost_price > 0
+        else 0.0
+    )
 
     return {
         "product_id": product_id,
-        "simulated_price": round(simulated_price, 2),
-        "expected_demand": round(expected_demand, 2),
-        "expected_profit": round(profit, 2),
-        "margin_pct": round(margin_pct, 2),
+        "simulated_price": float(round(simulated_price, 2)),
+        "expected_demand": float(round(expected_demand, 2)),
+        "expected_profit": float(round(profit, 2)),
+        "margin_pct": float(round(margin_pct, 2)),
     }

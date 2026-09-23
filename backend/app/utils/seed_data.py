@@ -38,17 +38,17 @@ DATA_PATH = os.path.join(
 )
 
 
-def seed():
+def seed(force: bool = False):
     """
     Seed the database from the CSV dataset.
 
     Steps
     -----
     1. Create all tables (no-op if they already exist).
-    2. Check if products table has data — exit early if so.
+    2. Check if products table has data — exit early unless force=True.
     3. Read the CSV, parse dates.
     4. Extract the latest row per product → insert as Product rows.
-    5. Extract the last 30 rows per product → insert as Sale rows.
+    5. Extract the last 30 rows per product → insert as Sale rows with historical sold_at timestamps.
     6. Commit everything in one transaction for atomicity.
     """
     # Ensure all tables exist (safe to call multiple times)
@@ -57,10 +57,16 @@ def seed():
     db = SessionLocal()
 
     # ── Idempotency check ────────────────────────────────────────────────────
-    if db.query(Product).count() > 0:
+    if not force and db.query(Product).count() > 0:
         print("[!] Database already seeded - skipping.")
         db.close()
         return
+
+    if force:
+        print("[*] Force reseed requested: clearing existing data...")
+        db.query(Sale).delete()
+        db.query(Product).delete()
+        db.commit()
 
     print("[*] Reading CSV...")
     df = pd.read_csv(DATA_PATH)
@@ -106,6 +112,7 @@ def seed():
         price_sold = float(row["price"])
         units = int(row["units_sold"])
         profit = (price_sold - cost) * units   # denormalised for fast analytics
+        sold_date = row["date"].to_pydatetime()
 
         sales.append(
             Sale(
@@ -113,6 +120,7 @@ def seed():
                 price_sold=price_sold,
                 units_sold=units,
                 profit=profit,
+                sold_at=sold_date,
             )
         )
 
@@ -124,4 +132,6 @@ def seed():
 
 
 if __name__ == "__main__":
-    seed()
+    force_seed = "--force" in sys.argv or "--reseed" in sys.argv
+    seed(force=force_seed)
+
