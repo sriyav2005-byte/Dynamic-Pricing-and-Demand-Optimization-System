@@ -97,6 +97,20 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json()["product_id"], 0)
 
+    def test_search_endpoints(self):
+        platforms = self.client.get("/search/platforms")
+        self.assertEqual(platforms.status_code, 200)
+        self.assertIsInstance(platforms.json(), list)
+        self.assertGreater(len(platforms.json()), 0)
+
+        live = self.client.get("/search/live?query=milk")
+        self.assertEqual(live.status_code, 200)
+        data = live.json()
+        self.assertIn("results", data)
+        self.assertIn("query", data)
+
 
 if __name__ == "__main__":
     unittest.main()
+
+
