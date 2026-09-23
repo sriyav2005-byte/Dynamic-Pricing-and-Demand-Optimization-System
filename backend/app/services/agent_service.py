@@ -183,8 +183,8 @@ def _handle_pricing_explanation(message: str, db: Session,
     explanation = constraint_explanations.get(constraint, constraint_explanations["none"])
 
     text = (
-        f"**Price Recommendation for Product #{product.product_id}** "
-        f"({product.category})\n\n"
+        f"**Price Recommendation for {product.name}** "
+        f"({product.category}, #{product.product_id})\n\n"
         f"📊 **Recommended Price**: ₹{rec['recommended_price']}\n"
         f"📈 **Expected Demand**: {rec['expected_demand']} units\n"
         f"💰 **Expected Profit**: ₹{rec['expected_profit']}\n\n"
@@ -204,6 +204,7 @@ def _handle_pricing_explanation(message: str, db: Session,
         "response_text": text,
         "data": {
             "product_id": product.product_id,
+            "product_name": product.name,
             "category": product.category,
             "current_price": product.current_price,
             "recommended_price": rec["recommended_price"],
@@ -214,8 +215,8 @@ def _handle_pricing_explanation(message: str, db: Session,
         "data_type": "pricing",
         "confidence": 0.95,
         "suggestions": [
-            f"What's the profit impact if I set product #{product.product_id} to ₹{round(product.mrp * 0.85, 2)}?",
-            f"How does product #{product.product_id} compare with competitors?",
+            f"What's the profit impact if I set {product.name} to ₹{round(product.mrp * 0.85, 2)}?",
+            f"How does {product.name} compare with competitors?",
             "Which products should be discounted today?",
         ],
     }
@@ -253,6 +254,7 @@ def _handle_discount_suggestions(message: str, db: Session,
 
             candidates.append({
                 "product_id": p.product_id,
+                "product_name": p.name,
                 "category": p.category,
                 "current_price": p.current_price,
                 "suggested_price": suggested,
@@ -276,7 +278,7 @@ def _handle_discount_suggestions(message: str, db: Session,
         lines = [f"🏷️ **{len(top)} products recommended for discount today:**\n"]
         for c in top:
             lines.append(
-                f"• **Product #{c['product_id']}** ({c['category']}): "
+                f"• **{c['product_name']}** ({c['category']}, #{c['product_id']}): "
                 f"₹{c['current_price']} → ₹{c['suggested_price']} "
                 f"(-{c['markdown_pct']}%) — {', '.join(c['reasons'])}"
             )
@@ -326,8 +328,9 @@ def _handle_expiry_risk(message: str, db: Session,
         if critical:
             lines.append(f"\n🔴 **CRITICAL** ({len(critical)} products — expires in < 3 days):")
             for p in critical:
+                name = p.get("product_name") or f"Product #{p['product_id']}"
                 lines.append(
-                    f"  • Product #{p['product_id']} ({p['category']}): "
+                    f"  • {name} ({p['category']}, #{p['product_id']}): "
                     f"{p['days_to_expiry']}d left, {p['stock_level']} units, "
                     f"recommend -{p['markdown_pct']}% → ₹{p['suggested_price']}"
                 )
@@ -335,8 +338,9 @@ def _handle_expiry_risk(message: str, db: Session,
         if warning:
             lines.append(f"\n🟡 **WARNING** ({len(warning)} products — expires in 3-7 days):")
             for p in warning:
+                name = p.get("product_name") or f"Product #{p['product_id']}"
                 lines.append(
-                    f"  • Product #{p['product_id']} ({p['category']}): "
+                    f"  • {name} ({p['category']}, #{p['product_id']}): "
                     f"{p['days_to_expiry']}d left, {p['stock_level']} units, "
                     f"recommend -{p['markdown_pct']}%"
                 )
@@ -344,8 +348,9 @@ def _handle_expiry_risk(message: str, db: Session,
         if watch:
             lines.append(f"\n🟢 **WATCH** ({len(watch)} products — expires in 7-14 days):")
             for p in watch[:5]:
+                name = p.get("product_name") or f"Product #{p['product_id']}"
                 lines.append(
-                    f"  • Product #{p['product_id']} ({p['category']}): "
+                    f"  • {name} ({p['category']}, #{p['product_id']}): "
                     f"{p['days_to_expiry']}d left"
                 )
 
@@ -381,8 +386,8 @@ def _handle_competitor_comparison(message: str, db: Session,
         )
 
         lines = [
-            f"📊 **Competitor Comparison for Product #{product.product_id}** "
-            f"({product.category})\n",
+            f"📊 **Competitor Comparison for {product.name}** "
+            f"({product.category}, #{product.product_id})\n",
             f"**Our Price**: ₹{product.current_price}",
             f"**Market Average**: ₹{comp['market_avg']}",
             f"**Competitiveness Score**: {comp['competitiveness_score']}/100\n",
@@ -435,7 +440,7 @@ def _handle_competitor_comparison(message: str, db: Session,
         "suggestions": [
             "Which products are priced above market average?",
             "What pricing strategy should I use for my least competitive products?",
-            "Why was the price for product #0 recommended?",
+            "Why was this price recommended?",
         ],
     }
 

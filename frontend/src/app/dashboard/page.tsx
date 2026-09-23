@@ -37,6 +37,7 @@ import {
   getCategories,
   getRecommendation,
   updateSales,
+  getProductName,
   Product,
   PriceRecommendation,
 } from "@/lib/api";
@@ -162,8 +163,10 @@ export default function DashboardPage() {
   const filtered = products.filter((p) => {
     if (!search) return true;
     const s = search.toLowerCase();
+    const productName = p.name || p.product_name || getProductName(p.product_id, undefined, p.category);
     return (
       String(p.product_id).includes(s) ||
+      productName.toLowerCase().includes(s) ||
       p.category.toLowerCase().includes(s)
     );
   });
@@ -275,8 +278,8 @@ export default function DashboardPage() {
                           href={`/product/${p.product_id}`}
                           className="font-semibold text-slate-800 hover:text-violet-600 transition-colors flex items-center gap-1"
                         >
-                          Product {p.product_id}
-                          <ChevronRight size={12} className="text-slate-400" />
+                          {p.name || p.product_name || getProductName(p.product_id, undefined, p.category)}
+                          <ChevronRight size={12} className="text-slate-400 shrink-0" />
                         </Link>
                       </div>
                     </td>

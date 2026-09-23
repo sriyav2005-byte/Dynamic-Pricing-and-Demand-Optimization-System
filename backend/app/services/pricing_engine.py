@@ -24,6 +24,7 @@ Constraints applied (in priority order)
 
 from app.services.demand_predictor import get_predictor
 from app.services.bandit import get_bandit
+from app.utils.product_names import PRODUCT_NAMES
 
 # ── Constraint constants ─────────────────────────────────────────────────────
 MAX_PRICE_INCREASE_PCT = 0.10   # allow at most +10% above current price
@@ -124,6 +125,7 @@ def recommend_price(
 
     return {
         "product_id": product_id,
+        "product_name": PRODUCT_NAMES.get(product_id, f"Product #{product_id}"),
         "current_price": float(current_price),
         "recommended_price": candidate_price,
         "expected_demand": float(round(expected_demand, 2)),
@@ -177,6 +179,7 @@ def simulate_price(
 
     return {
         "product_id": product_id,
+        "product_name": PRODUCT_NAMES.get(product_id, f"Product #{product_id}"),
         "simulated_price": float(round(simulated_price, 2)),
         "expected_demand": float(round(expected_demand, 2)),
         "expected_profit": float(round(profit, 2)),

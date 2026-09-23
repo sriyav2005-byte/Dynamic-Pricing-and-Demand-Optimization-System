@@ -23,6 +23,9 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// ── Product Names ─────────────────────────────────────────────────────────────
+export { getProductName, PRODUCT_NAMES } from "./products";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // TypeScript interfaces — mirror the Pydantic schemas in the backend
 // ─────────────────────────────────────────────────────────────────────────────
@@ -33,6 +36,8 @@ const api = axios.create({
 export interface Product {
   id: number;
   product_id: number;
+  name?: string;
+  product_name?: string;
   category: string;
   cost_price: number;
   mrp: number;
@@ -56,6 +61,7 @@ export interface PriceOption {
 /** Full recommendation response from GET /pricing/recommend/{id}. */
 export interface PriceRecommendation {
   product_id: number;
+  product_name?: string;
   current_price: number;
   recommended_price: number;
   expected_demand: number;
@@ -67,6 +73,7 @@ export interface PriceRecommendation {
 /** Result from the price simulator (GET /pricing/simulate/{id}?price=X). */
 export interface SimulationResult {
   product_id: number;
+  product_name?: string;
   simulated_price: number;
   expected_demand: number;
   expected_profit: number;
@@ -84,6 +91,7 @@ export interface SalePayload {
 export interface SaleResponse {
   id: number;
   product_id: number;
+  product_name?: string;
   price_sold: number;
   units_sold: number;
   profit: number;
@@ -98,7 +106,7 @@ export interface AnalyticsSummary {
   total_units_sold: number;
   avg_margin_pct: number;
   products_at_risk: number;
-  top_products: { product_id: number; total_profit: number }[];
+  top_products: { product_id: number; product_name?: string; total_profit: number }[];
 }
 
 export interface TrendPoint {
@@ -120,6 +128,7 @@ export interface CompetitorPrice {
 
 export interface CompetitorPriceResponse {
   product_id: number;
+  product_name?: string;
   our_price: number;
   competitors: CompetitorPrice[];
   market_avg: number;
@@ -139,6 +148,7 @@ export interface MarketOverviewItem extends CompetitorPriceResponse {
 
 export interface PricingStrategy {
   product_id: number;
+  product_name?: string;
   strategy: string;
   current_price: number;
   target_price: number;
@@ -181,6 +191,7 @@ export interface ForecastPoint {
 
 export interface DemandForecast {
   product_id: number;
+  product_name?: string;
   horizon: number;
   forecast_points: ForecastPoint[];
   total_predicted_demand: number;
@@ -194,6 +205,7 @@ export interface DemandForecast {
 
 export interface ForecastOverviewItem {
   product_id: number;
+  product_name?: string;
   category: string;
   current_price: number;
   total_7d_demand: number;
@@ -227,6 +239,7 @@ export interface InventoryOverview {
 
 export interface ExpiryRiskItem {
   product_id: number;
+  product_name?: string;
   category: string;
   current_price: number;
   cost_price: number;
@@ -242,6 +255,7 @@ export interface ExpiryRiskItem {
 export interface InventoryAlert {
   type: string;
   product_id: number;
+  product_name?: string;
   category: string;
   title: string;
   message: string;
@@ -337,5 +351,57 @@ export const getExpiryRisk = () =>
 
 export const getInventoryAlerts = () =>
   api.get<InventoryAlert[]>("/inventory/alerts").then((r) => r.data);
+
+// ── Live Price Search ─────────────────────────────────────────────────────────
+
+/** A single product result from one quick-commerce platform. */
+export interface LiveSearchResult {
+  platform_key: string;
+  platform: string;
+  color: string;
+  text_color: string;
+  logo_char: string;
+  tagline: string;
+  product_name: string;
+  price: number;
+  original_price: number;
+  discount_pct: number;
+  product_url: string;
+  is_live_data: boolean;
+  image_url: string | null;
+  in_stock: boolean;
+  quantity: string | null;
+}
+
+/** Full response from GET /search/live. */
+export interface LiveSearchResponse {
+  query: string;
+  results: LiveSearchResult[];
+  total: number;
+  live_platforms: string[];
+  estimated_platforms: string[];
+}
+
+/** Platform metadata from GET /search/platforms. */
+export interface SearchPlatform {
+  key: string;
+  name: string;
+  color: string;
+  text_color: string;
+  tagline: string;
+}
+
+export const searchLivePrices = (
+  query: string,
+  category?: string
+): Promise<LiveSearchResponse> =>
+  api
+    .get<LiveSearchResponse>("/search/live", {
+      params: { query, ...(category ? { category } : {}) },
+    })
+    .then((r) => r.data);
+
+export const getSearchPlatforms = (): Promise<SearchPlatform[]> =>
+  api.get<SearchPlatform[]>("/search/platforms").then((r) => r.data);
 
 export default api;

@@ -8,6 +8,7 @@
 "use client";
 
 import { AlertTriangle, Tag } from "lucide-react";
+import { getProductName } from "@/lib/api";
 
 interface Props {
   data: Record<string, unknown> | unknown[] | null;
@@ -63,8 +64,8 @@ export default function AgentResponseCard({ data, dataType }: Props) {
             >
               <div className="flex items-center gap-2">
                 <Tag size={12} style={{ color: "#f59e0b" }} />
-                <span className="text-sm text-slate-800 font-semibold">
-                  #{String(item.product_id)}
+                <span className="text-sm text-slate-800 font-semibold line-clamp-1 max-w-[180px]" title={String(item.product_name || getProductName(Number(item.product_id)))}>
+                  {String(item.product_name || getProductName(Number(item.product_id)))}
                 </span>
                 <span className="badge badge-blue capitalize text-xs">
                   {String(item.category)}
@@ -105,8 +106,8 @@ export default function AgentResponseCard({ data, dataType }: Props) {
               >
                 <div className="flex items-center gap-2">
                   <AlertTriangle size={12} style={{ color }} />
-                  <span className="text-sm text-slate-800 font-semibold">
-                    #{String(item.product_id)}
+                  <span className="text-sm text-slate-800 font-semibold line-clamp-1 max-w-[180px]" title={String(item.product_name || getProductName(Number(item.product_id)))}>
+                    {String(item.product_name || getProductName(Number(item.product_id)))}
                   </span>
                   <span className="badge capitalize text-xs"
                     style={{ background: `${color}22`, color }}>

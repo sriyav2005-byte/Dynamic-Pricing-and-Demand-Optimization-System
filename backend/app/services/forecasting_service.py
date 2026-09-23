@@ -26,6 +26,7 @@ import datetime
 from typing import Optional
 
 from app.services.demand_predictor import get_predictor
+from app.utils.product_names import PRODUCT_NAMES
 
 
 def generate_forecast(
@@ -136,6 +137,7 @@ def generate_forecast(
 
     return {
         "product_id": product_id,
+        "product_name": PRODUCT_NAMES.get(product_id, f"Product #{product_id}"),
         "horizon": horizon,
         "forecast_points": points,
         "total_predicted_demand": total,
@@ -171,6 +173,7 @@ def get_forecast_overview(products: list) -> list:
 
         summaries.append({
             "product_id": p.product_id,
+            "product_name": p.name,
             "category": p.category,
             "current_price": p.current_price,
             "total_7d_demand": forecast["total_predicted_demand"],

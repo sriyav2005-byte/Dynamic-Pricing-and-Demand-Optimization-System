@@ -47,6 +47,7 @@ class InventoryOverview(BaseModel):
 
 class ExpiryRiskItem(BaseModel):
     product_id: int
+    product_name: Optional[str] = None
     category: str
     current_price: float
     cost_price: float
@@ -62,6 +63,7 @@ class ExpiryRiskItem(BaseModel):
 class InventoryAlert(BaseModel):
     type: str
     product_id: int
+    product_name: Optional[str] = None
     category: str
     title: str
     message: str

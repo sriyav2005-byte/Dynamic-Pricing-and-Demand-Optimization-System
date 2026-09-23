@@ -43,6 +43,7 @@ class Product(Base):
     # Business product identifier — must be unique across the table
     product_id = Column(Integer, unique=True, index=True, nullable=False)
 
+    product_name = Column(String(200), nullable=True)
     category = Column(String(100), nullable=False)
 
     # Economic bounds — cost is the minimum viable price, mrp is the maximum
@@ -60,3 +61,11 @@ class Product(Base):
     # Audit timestamps — set automatically by the database engine
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    @property
+    def name(self) -> str:
+        """Friendly display name for the product."""
+        if self.product_name:
+            return self.product_name
+        from app.utils.product_names import PRODUCT_NAMES
+        return PRODUCT_NAMES.get(self.product_id, f"{self.category.title()} #{self.product_id}")

@@ -152,6 +152,7 @@ def get_expiry_risk(products: list) -> list:
 
         at_risk.append({
             "product_id": p.product_id,
+            "product_name": p.name,
             "category": p.category,
             "current_price": p.current_price,
             "cost_price": p.cost_price,
@@ -185,8 +186,9 @@ def get_inventory_alerts(products: list) -> list:
             alerts.append({
                 "type": "critical",
                 "product_id": p.product_id,
+                "product_name": p.name,
                 "category": p.category,
-                "title": f"Product #{p.product_id} expires in {p.days_to_expiry} day(s)",
+                "title": f"{p.name} expires in {p.days_to_expiry} day(s)",
                 "message": (
                     f"{p.stock_level} units of {p.category} at risk. "
                     f"Potential waste: ₹{round(p.cost_price * p.stock_level, 2)}. "
@@ -201,8 +203,9 @@ def get_inventory_alerts(products: list) -> list:
             alerts.append({
                 "type": "warning",
                 "product_id": p.product_id,
+                "product_name": p.name,
                 "category": p.category,
-                "title": f"Product #{p.product_id} expiring soon ({p.days_to_expiry}d)",
+                "title": f"{p.name} expiring soon ({p.days_to_expiry}d)",
                 "message": (
                     f"{p.stock_level} units remaining. "
                     "Consider promotional pricing to accelerate sales."
@@ -216,8 +219,9 @@ def get_inventory_alerts(products: list) -> list:
             alerts.append({
                 "type": "warning",
                 "product_id": p.product_id,
+                "product_name": p.name,
                 "category": p.category,
-                "title": f"Product #{p.product_id} low stock ({p.stock_level} units)",
+                "title": f"{p.name} low stock ({p.stock_level} units)",
                 "message": (
                     f"Only {p.stock_level} units of {p.category} left. "
                     "Consider reordering to avoid stockout."
@@ -231,8 +235,9 @@ def get_inventory_alerts(products: list) -> list:
             alerts.append({
                 "type": "info",
                 "product_id": p.product_id,
+                "product_name": p.name,
                 "category": p.category,
-                "title": f"Product #{p.product_id} overstocked ({p.stock_level} units)",
+                "title": f"{p.name} overstocked ({p.stock_level} units)",
                 "message": (
                     f"Stock level ({p.stock_level}) exceeds optimal range. "
                     "Consider promotional pricing to increase turnover."

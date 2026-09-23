@@ -17,6 +17,7 @@ class ForecastPoint(BaseModel):
 
 class DemandForecast(BaseModel):
     product_id: int
+    product_name: Optional[str] = None
     horizon: int
     forecast_points: List[ForecastPoint]
     total_predicted_demand: float
@@ -30,6 +31,7 @@ class DemandForecast(BaseModel):
 
 class ForecastOverviewItem(BaseModel):
     product_id: int
+    product_name: Optional[str] = None
     category: str
     current_price: float
     total_7d_demand: float

@@ -14,6 +14,7 @@ class CompetitorPrice(BaseModel):
 
 class CompetitorPriceResponse(BaseModel):
     product_id: int
+    product_name: Optional[str] = None
     our_price: float
     competitors: List[CompetitorPrice]
     market_avg: float
@@ -25,6 +26,7 @@ class CompetitorPriceResponse(BaseModel):
 
 class MarketOverviewItem(BaseModel):
     product_id: int
+    product_name: Optional[str] = None
     our_price: float
     competitors: List[CompetitorPrice]
     market_avg: float
@@ -41,6 +43,7 @@ class MarketOverviewItem(BaseModel):
 
 class PricingStrategyResponse(BaseModel):
     product_id: int
+    product_name: Optional[str] = None
     strategy: str
     current_price: float
     target_price: float

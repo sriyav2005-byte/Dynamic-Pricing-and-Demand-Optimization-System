@@ -5,6 +5,8 @@ from datetime import datetime
 
 class ProductBase(BaseModel):
     product_id: int
+    name: str
+    product_name: Optional[str] = None
     category: str
     cost_price: float
     mrp: float
@@ -35,6 +37,7 @@ class ProductResponse(ProductBase):
 
 class PriceRecommendation(BaseModel):
     product_id: int
+    product_name: Optional[str] = None
     current_price: float
     recommended_price: float
     expected_demand: float
@@ -45,6 +48,7 @@ class PriceRecommendation(BaseModel):
 
 class SimulationResult(BaseModel):
     product_id: int
+    product_name: Optional[str] = None
     simulated_price: float
     expected_demand: float
     expected_profit: float

@@ -28,6 +28,7 @@ Competitiveness score
 import hashlib
 import random
 from typing import List, Optional
+from app.utils.product_names import PRODUCT_NAMES
 
 # ── Platform pricing profiles ────────────────────────────────────────────────
 # (min_fraction_of_mrp, max_fraction_of_mrp)
@@ -155,6 +156,7 @@ def get_competitor_prices(product_id: int, cost_price: float, mrp: float,
 
     return {
         "product_id": product_id,
+        "product_name": PRODUCT_NAMES.get(product_id, f"Product #{product_id}"),
         "our_price": our_price,
         "competitors": competitors,
         "market_avg": market_avg,
@@ -221,6 +223,7 @@ def get_pricing_strategy(product_id: int, cost_price: float, mrp: float,
 
     return {
         "product_id": product_id,
+        "product_name": comp_data.get("product_name", PRODUCT_NAMES.get(product_id, f"Product #{product_id}")),
         "strategy": strategy,
         "current_price": our_price,
         "target_price": target_price,
@@ -254,6 +257,7 @@ def get_market_overview(products: list) -> list:
             category=p.category,
             our_price=p.current_price,
         )
+        data["product_name"] = p.name
         data["category"] = p.category
         data["cost_price"] = p.cost_price
         data["mrp"] = p.mrp

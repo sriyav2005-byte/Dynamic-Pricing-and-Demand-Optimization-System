@@ -10,3 +10,5 @@ numpy
 python-dotenv
 httpx
 aiofiles
+beautifulsoup4
+lxml

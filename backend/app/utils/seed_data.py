@@ -77,11 +77,14 @@ def seed(force: bool = False):
     # This means product.current_price reflects the latest observed price.
     latest = df.sort_values("date").groupby("product_id").last().reset_index()
 
+    from app.utils.product_names import PRODUCT_NAMES
     products = []
     for _, row in latest.iterrows():
+        pid = int(row["product_id"])
         products.append(
             Product(
-                product_id=int(row["product_id"]),
+                product_id=pid,
+                product_name=PRODUCT_NAMES.get(pid, f"{str(row['category']).title()} #{pid}"),
                 category=str(row["category"]),
                 cost_price=float(row["cost_price"]),
                 mrp=float(row["mrp"]),

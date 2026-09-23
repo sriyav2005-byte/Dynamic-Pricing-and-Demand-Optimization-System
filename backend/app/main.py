@@ -35,6 +35,7 @@ from app.api.competitor import router as competitor_router
 from app.api.agent import router as agent_router
 from app.api.forecasting import router as forecasting_router
 from app.api.inventory import router as inventory_router
+from app.api.search import router as search_router
 
 
 @asynccontextmanager
@@ -92,6 +93,7 @@ app.include_router(competitor_router)   # /competitor/*
 app.include_router(agent_router)        # /agent/*
 app.include_router(forecasting_router)  # /forecasting/*
 app.include_router(inventory_router)    # /inventory/*
+app.include_router(search_router)       # /search/*
 
 
 # ── Health check ─────────────────────────────────────────────────────────────

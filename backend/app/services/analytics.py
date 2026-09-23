@@ -62,7 +62,11 @@ def get_summary(db: Session) -> dict:
         product_profits[s.product_id] = product_profits.get(s.product_id, 0) + s.profit
     top = sorted(product_profits.items(), key=lambda x: x[1], reverse=True)[:5]
     top_products = [
-        {"product_id": pid, "total_profit": round(profit, 2)}
+        {
+            "product_id": pid,
+            "product_name": product_map[pid].name if pid in product_map else f"Product #{pid}",
+            "total_profit": round(profit, 2),
+        }
         for pid, profit in top
     ]
 

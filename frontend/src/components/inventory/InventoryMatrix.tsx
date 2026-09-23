@@ -17,7 +17,7 @@ import {
   ResponsiveContainer,
   ReferenceArea,
 } from "recharts";
-import { Product } from "@/lib/api";
+import { Product, getProductName } from "@/lib/api";
 
 interface Props {
   products: Product[];
@@ -28,7 +28,13 @@ export default function InventoryMatrix({ products, height = 400 }: Props) {
   // Classify products into risk zones
   const critical = products
     .filter((p) => p.days_to_expiry < 7 && p.stock_level > 50)
-    .map((p) => ({ x: p.days_to_expiry, y: p.stock_level, id: p.product_id, category: p.category }));
+    .map((p) => ({
+      x: p.days_to_expiry,
+      y: p.stock_level,
+      id: p.product_id,
+      name: p.name || p.product_name || getProductName(p.product_id, undefined, p.category),
+      category: p.category,
+    }));
 
   const warning = products
     .filter(
@@ -36,7 +42,13 @@ export default function InventoryMatrix({ products, height = 400 }: Props) {
         (p.days_to_expiry < 7 && p.stock_level <= 50) ||
         (p.days_to_expiry >= 7 && p.days_to_expiry < 14 && p.stock_level > 100)
     )
-    .map((p) => ({ x: p.days_to_expiry, y: p.stock_level, id: p.product_id, category: p.category }));
+    .map((p) => ({
+      x: p.days_to_expiry,
+      y: p.stock_level,
+      id: p.product_id,
+      name: p.name || p.product_name || getProductName(p.product_id, undefined, p.category),
+      category: p.category,
+    }));
 
   const healthy = products
     .filter(
@@ -44,7 +56,13 @@ export default function InventoryMatrix({ products, height = 400 }: Props) {
         !critical.some((c) => c.id === p.product_id) &&
         !warning.some((w) => w.id === p.product_id)
     )
-    .map((p) => ({ x: p.days_to_expiry, y: p.stock_level, id: p.product_id, category: p.category }));
+    .map((p) => ({
+      x: p.days_to_expiry,
+      y: p.stock_level,
+      id: p.product_id,
+      name: p.name || p.product_name || getProductName(p.product_id, undefined, p.category),
+      category: p.category,
+    }));
 
   return (
     <div className="glass rounded-2xl p-6">
@@ -117,7 +135,7 @@ export default function InventoryMatrix({ products, height = 400 }: Props) {
             labelFormatter={(_, payload) => {
               if (payload && payload[0]) {
                 const d = payload[0].payload;
-                return `Product #${d.id} (${d.category})`;
+                return `${d.name || getProductName(d.id)} (#${d.id} · ${d.category})`;
               }
               return "";
             }}

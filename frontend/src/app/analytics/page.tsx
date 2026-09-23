@@ -24,7 +24,7 @@
  */
 "use client";
 import { useEffect, useState } from "react";
-import { getAnalyticsSummary, getAnalyticsTrends, AnalyticsSummary, TrendPoint } from "@/lib/api";
+import { getAnalyticsSummary, getAnalyticsTrends, getProductName, AnalyticsSummary, TrendPoint } from "@/lib/api";
 import StatCard from "@/components/ui/StatCard";
 import SalesTrendChart from "@/components/charts/SalesTrendChart";
 import ProfitBreakdownChart from "@/components/charts/ProfitBreakdownChart";
@@ -186,8 +186,10 @@ export default function AnalyticsPage() {
                       >
                         {i + 1}
                       </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-semibold text-slate-700">Product #{p.product_id}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-slate-800 truncate" title={p.product_name || getProductName(p.product_id)}>
+                          {p.product_name || getProductName(p.product_id)}
+                        </div>
                         <div className="w-full h-1 rounded-full mt-1 bg-slate-100">
                           <div
                             className="h-full rounded-full"

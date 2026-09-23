@@ -12,6 +12,7 @@ import {
   getProducts,
   getDemandForecast,
   getForecastOverview,
+  getProductName,
   Product,
   DemandForecast,
   ForecastOverviewItem,
@@ -103,11 +104,14 @@ export default function ForecastingPage() {
           onChange={(e) => setSelectedId(Number(e.target.value))}
           className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-700 bg-white outline-none cursor-pointer focus:border-violet-500 transition-colors"
         >
-          {products.map((p) => (
-            <option key={p.product_id} value={p.product_id} className="bg-white text-slate-800">
-              #{p.product_id} — {p.category}
-            </option>
-          ))}
+          {products.map((p) => {
+            const name = p.name || p.product_name || getProductName(p.product_id, undefined, p.category);
+            return (
+              <option key={p.product_id} value={p.product_id} className="bg-white text-slate-800">
+                {name} (#{p.product_id})
+              </option>
+            );
+          })}
         </select>
 
         <div className="flex items-center gap-2 ml-4">
@@ -188,7 +192,16 @@ export default function ForecastingPage() {
           </div>
         </div>
       ) : forecast ? (
-        <ForecastChart data={forecast.forecast_points} />
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <span>{forecast.product_name || getProductName(selectedId)}</span>
+              <span className="text-xs font-mono font-normal text-slate-400">#{selectedId}</span>
+            </h2>
+            <span className="text-xs text-slate-400 font-medium">Daily Predicted Demand & Confidence Bounds</span>
+          </div>
+          <ForecastChart data={forecast.forecast_points} />
+        </div>
       ) : null}
 
       {/* Overview Table */}
@@ -218,7 +231,19 @@ export default function ForecastingPage() {
                     background: selectedId === item.product_id ? "rgba(124,58,237,0.06)" : undefined,
                   }}
                 >
-                  <td className="font-semibold text-slate-800">#{item.product_id}</td>
+                  <td className="font-semibold text-slate-800">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                        style={{ background: "rgba(124,58,237,0.08)", color: "#7c3aed" }}
+                      >
+                        #{item.product_id}
+                      </div>
+                      <span className="line-clamp-1">
+                        {item.product_name || getProductName(item.product_id, undefined, item.category)}
+                      </span>
+                    </div>
+                  </td>
                   <td>
                     <span className="badge badge-blue capitalize">{item.category}</span>
                   </td>

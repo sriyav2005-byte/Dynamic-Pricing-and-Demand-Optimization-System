@@ -13,6 +13,7 @@ import {
   getProducts,
   getCategories,
   getRecommendation,
+  getProductName,
   Product,
   PriceRecommendation,
 } from "@/lib/api";
@@ -70,7 +71,12 @@ export default function ProductsPage() {
     .filter((p) => {
       if (!search) return true;
       const s = search.toLowerCase();
-      return String(p.product_id).includes(s) || p.category.toLowerCase().includes(s);
+      const productName = p.name || p.product_name || getProductName(p.product_id, undefined, p.category);
+      return (
+        String(p.product_id).includes(s) ||
+        productName.toLowerCase().includes(s) ||
+        p.category.toLowerCase().includes(s)
+      );
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -99,7 +105,7 @@ export default function ProductsPage() {
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by ID or category..."
+            placeholder="Search by product name, category, or ID..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 bg-white outline-none focus:border-violet-500 transition-colors"
@@ -164,10 +170,10 @@ export default function ProductsPage() {
               >
                 <div>
                   {/* Header */}
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
+                        className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold"
                         style={{ background: "rgba(124,58,237,0.08)", color: "#7c3aed" }}
                       >
                         #{p.product_id}
@@ -179,6 +185,11 @@ export default function ProductsPage() {
                       className="opacity-0 group-hover:opacity-100 transition-all text-violet-500 translate-x-[-4px] group-hover:translate-x-0"
                     />
                   </div>
+
+                  {/* Product Title */}
+                  <h3 className="font-bold text-slate-800 text-base mb-3 line-clamp-1 group-hover:text-violet-600 transition-colors" title={p.name || p.product_name || getProductName(p.product_id, undefined, p.category)}>
+                    {p.name || p.product_name || getProductName(p.product_id, undefined, p.category)}
+                  </h3>
 
                   {/* Price Range */}
                   <div className="mb-4">

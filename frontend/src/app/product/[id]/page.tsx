@@ -165,7 +165,7 @@ export default function ProductDetailPage() {
               #{product.product_id}
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold text-slate-900">Product {product.product_id}</h1>
+              <h1 className="text-2xl font-extrabold text-slate-900">{product.name || product.product_name || `Product #${product.product_id}`}</h1>
               <span className="badge badge-blue capitalize">{product.category}</span>
             </div>
           </div>

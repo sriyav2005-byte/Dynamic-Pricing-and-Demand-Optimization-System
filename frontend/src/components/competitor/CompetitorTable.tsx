@@ -68,9 +68,10 @@ export default function CompetitorTable({ data, onSelectProduct }: Props) {
                   <td>
                     <button
                       onClick={() => onSelectProduct?.(item.product_id)}
-                      className="font-semibold text-slate-800 hover:text-violet-600 transition-colors cursor-pointer"
+                      className="font-semibold text-slate-800 hover:text-violet-600 transition-colors cursor-pointer text-left"
                     >
-                      #{item.product_id}
+                      <div className="font-semibold text-slate-800 line-clamp-1">{item.product_name || `Product #${item.product_id}`}</div>
+                      <div className="text-xs text-slate-400 font-mono">#{item.product_id}</div>
                     </button>
                   </td>
                   <td>

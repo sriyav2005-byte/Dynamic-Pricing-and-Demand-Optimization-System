@@ -22,16 +22,18 @@ import {
   TrendingUp,
   Warehouse,
   MessageSquare,
+  Search,
 } from "lucide-react";
 
 const NAV = [
-  { href: "/dashboard",   label: "Dashboard",    icon: LayoutDashboard },
-  { href: "/products",    label: "Products",     icon: Package },
-  { href: "/competitors", label: "Competitors",  icon: ShieldCheck },
-  { href: "/forecasting", label: "Forecasting",  icon: TrendingUp },
-  { href: "/inventory",   label: "Inventory",    icon: Warehouse },
-  { href: "/agent",       label: "AI Agent",     icon: MessageSquare },
-  { href: "/analytics",   label: "Analytics",    icon: BarChart3 },
+  { href: "/dashboard",    label: "Dashboard",    icon: LayoutDashboard, badge: null },
+  { href: "/products",     label: "Products",     icon: Package,         badge: null },
+  { href: "/competitors",  label: "Competitors",  icon: ShieldCheck,     badge: null },
+  { href: "/forecasting",  label: "Forecasting",  icon: TrendingUp,      badge: null },
+  { href: "/inventory",    label: "Inventory",    icon: Warehouse,       badge: null },
+  { href: "/live-search",  label: "Live Search",  icon: Search,          badge: "LIVE" },
+  { href: "/agent",        label: "AI Agent",     icon: MessageSquare,   badge: "AI" },
+  { href: "/analytics",    label: "Analytics",    icon: BarChart3,       badge: null },
 ];
 
 export default function Sidebar() {
@@ -74,9 +76,21 @@ export default function Sidebar() {
           Navigation
         </div>
         <ul className="space-y-1">
-          {NAV.map(({ href, label, icon: Icon }) => {
+          {NAV.map(({ href, label, icon: Icon, badge }) => {
             const active = pathname === href || pathname.startsWith(href + "/");
             const isAgent = href === "/agent";
+            const isLiveSearch = href === "/live-search";
+
+            const activeBg = isAgent
+              ? "rgba(34, 211, 238, 0.08)"
+              : isLiveSearch
+              ? "rgba(239, 68, 68, 0.08)"
+              : "rgba(124, 58, 237, 0.08)";
+            const activeColor = isAgent
+              ? "#0891b2"
+              : isLiveSearch
+              ? "#dc2626"
+              : "#7c3aed";
 
             return (
               <li key={href}>
@@ -86,26 +100,29 @@ export default function Sidebar() {
                   style={
                     active
                       ? {
-                          background: isAgent
-                            ? "rgba(34, 211, 238, 0.08)"
-                            : "rgba(124, 58, 237, 0.08)",
-                          color: isAgent ? "#0891b2" : "#7c3aed",
-                          borderLeft: `2px solid ${isAgent ? "#0891b2" : "#7c3aed"}`,
+                          background: activeBg,
+                          color: activeColor,
+                          borderLeft: `2px solid ${activeColor}`,
                         }
                       : { color: "#64748b" }
                   }
                 >
                   <Icon size={18} />
                   {label}
-                  {isAgent && (
+                  {badge && (
                     <span
-                      className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                      className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-1"
                       style={{
-                        background: "rgba(34, 211, 238, 0.12)",
-                        color: "#0891b2",
+                        background: isLiveSearch
+                          ? "rgba(239, 68, 68, 0.12)"
+                          : "rgba(34, 211, 238, 0.12)",
+                        color: isLiveSearch ? "#dc2626" : "#0891b2",
                       }}
                     >
-                      AI
+                      {isLiveSearch && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block" />
+                      )}
+                      {badge}
                     </span>
                   )}
                 </Link>
@@ -124,7 +141,7 @@ export default function Sidebar() {
           </div>
           <div className="text-xs font-medium" style={{ color: "#475569" }}>Thompson Sampling Active</div>
           <div className="text-xs font-medium mt-0.5" style={{ color: "#475569" }}>XGBoost v3 Model</div>
-          <div className="text-xs font-medium mt-0.5" style={{ color: "#475569" }}>4 Competitor Feeds</div>
+          <div className="text-xs font-medium mt-0.5" style={{ color: "#475569" }}>5 Platform Search</div>
         </div>
       </div>
     </aside>

@@ -13,6 +13,7 @@ import {
   getInventoryOverview,
   getExpiryRisk,
   getInventoryAlerts,
+  getProductName,
   Product,
   InventoryOverview,
   ExpiryRiskItem,
@@ -291,12 +292,17 @@ export default function InventoryPage() {
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-2 h-2 rounded-full"
+                        className="w-2 h-2 rounded-full shrink-0"
                         style={{ background: riskColor }}
                       />
-                      <span className="text-sm font-semibold text-slate-800">
-                        #{item.product_id}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-400 font-mono">
+                          #{item.product_id}
+                        </span>
+                        <span className="text-sm font-semibold text-slate-800">
+                          {item.product_name || getProductName(item.product_id, undefined, item.category)}
+                        </span>
+                      </div>
                       <span className="badge capitalize text-xs"
                         style={{ background: `${riskColor}12`, color: riskColor, border: `1px solid ${riskColor}18` }}>
                         {item.risk_level}
