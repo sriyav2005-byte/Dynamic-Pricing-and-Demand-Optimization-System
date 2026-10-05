@@ -1,9 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import {
-  ArrowRight,
   Search,
   Bell,
   Settings,
@@ -12,7 +10,6 @@ import {
   Plus,
   Bookmark,
   TrendingUp,
-  FileText,
   Calendar,
   Layers,
   Sparkles,
@@ -21,7 +18,6 @@ import {
 
 export default function Home() {
   const router = useRouter();
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
   // Feature cards for "How It Works"
   const howItWorks = [
@@ -582,6 +578,7 @@ export default function Home() {
           Featured Products
         </div>
         <h2 className="text-3xl md:text-[2.25rem] font-extrabold text-slate-900 mb-4 tracking-tight">Top Optimized Products</h2>
+        <p className="text-xs text-slate-400 mb-2">Illustrative examples only — not live prices. Sign in to see your store&apos;s real recommendations.</p>
         <p className="text-slate-500 text-sm max-w-2xl mx-auto mb-16 leading-relaxed">
           Explore the best pricing recommendations available today, showcasing how AI balances margins and volumes for top items.
         </p>
@@ -644,7 +641,7 @@ export default function Home() {
                 </div>
                 
                 <button 
-                  onClick={() => router.push(`/product/${idx + 1}`)}
+                  onClick={() => router.push("/login")}
                   className={`px-4.5 py-2 rounded-xl text-[10px] font-bold transition-all ${
                     p.isHighlighted 
                       ? "bg-gradient-to-r from-violet-600 to-[#9061f9] text-white shadow-sm hover:opacity-95 active:scale-[0.98]" 
