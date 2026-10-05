@@ -1,347 +1,124 @@
-/**
- * app/inventory/page.tsx — Inventory Management Dashboard
- * =========================================================
- * Inventory health overview with risk matrix, alerts, category health,
- * and expiry timeline.
- */
-
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  getProducts,
-  getInventoryOverview,
-  getExpiryRisk,
-  getInventoryAlerts,
-  getProductName,
-  Product,
-  InventoryOverview,
-  ExpiryRiskItem,
-  InventoryAlert,
-} from "@/lib/api";
-import InventoryMatrix from "@/components/inventory/InventoryMatrix";
-import {
-  Warehouse,
-  AlertTriangle,
-  AlertCircle,
-  Info,
-  Package,
-  Clock,
-  TrendingDown,
-  RefreshCw,
-  ShieldAlert,
-} from "lucide-react";
+/** /inventory — stock intelligence, reorder advice and expiry markdown optimization. */
+
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { Warehouse } from "lucide-react";
+import { compactInr, dateFmt, getExpiryOptimization, getInventory, getMovements, inr, num, pct } from "@/lib/api";
+import { useApp } from "@/components/providers/AppProvider";
+import { Card, EmptyState, ErrorState, PageHeader, Pill, SkeletonCards, SkeletonRows, Tabs, Tile, useAsync } from "@/components/ui/kit";
+import { StatusBarChart } from "@/components/charts/viz";
+
+const STATUS_FILTERS = ["ALL", "OUT_OF_STOCK", "LOW_STOCK", "PREDICTED_STOCKOUT", "EXPIRY_RISK", "DEAD_STOCK", "OVERSTOCK"] as const;
+type Tab = "intelligence" | "expiry" | "movements";
 
 export default function InventoryPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [overview, setOverview] = useState<InventoryOverview | null>(null);
-  const [expiryRisk, setExpiryRisk] = useState<ExpiryRiskItem[]>([]);
-  const [alerts, setAlerts] = useState<InventoryAlert[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [prods, ov, risk, alts] = await Promise.all([
-        getProducts(),
-        getInventoryOverview(),
-        getExpiryRisk(),
-        getInventoryAlerts(),
-      ]);
-      setProducts(prods);
-      setOverview(ov);
-      setExpiryRisk(risk);
-      setAlerts(alts);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const alertIcon = (type: string) => {
-    if (type === "critical") return <AlertTriangle size={14} style={{ color: "#ef4444" }} />;
-    if (type === "warning") return <AlertCircle size={14} style={{ color: "#f59e0b" }} />;
-    return <Info size={14} style={{ color: "#22d3ee" }} />;
-  };
-
-  const alertStyle = (type: string) => ({
-    background:
-      type === "critical"
-        ? "rgba(239,68,68,0.04)"
-        : type === "warning"
-        ? "rgba(245,158,11,0.04)"
-        : "rgba(34,211,238,0.04)",
-    borderLeft: `3px solid ${
-      type === "critical" ? "#ef4444" : type === "warning" ? "#f59e0b" : "#0891b2"
-    }`,
-    border: "1px solid rgba(0, 0, 0, 0.05)"
-  });
-
-  if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="w-10 h-10 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-slate-400 font-medium">Loading inventory data...</p>
-        </div>
-      </div>
-    );
-  }
+  const { storeId } = useApp();
+  const [tab, setTab] = useState<Tab>("intelligence");
+  const [status, setStatus] = useState<(typeof STATUS_FILTERS)[number]>("ALL");
+  const inv = useAsync(() => getInventory(storeId), [storeId]);
+  const d = inv.data;
+  const rows = useMemo(() => (d?.products ?? []).filter((p) => status === "ALL" || p.statuses.includes(status))
+    .sort((a, b) => (a.days_of_cover ?? 1e9) - (b.days_of_cover ?? 1e9)), [d, status]);
 
   return (
-    <div className="p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 mb-2">
-            <span className="gradient-text">Inventory Intelligence</span>
-          </h1>
-          <p className="text-sm text-slate-500 font-medium">
-            Stock levels, expiry risk analysis, and inventory health scoring
-          </p>
-        </div>
-        <button
-          onClick={loadData}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold glow-btn text-white cursor-pointer"
-        >
-          <RefreshCw size={14} />
-          Refresh
-        </button>
-      </div>
-
-      {/* KPI Cards */}
-      {overview && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className="stat-card">
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Products</div>
-            <div className="text-2xl font-extrabold text-slate-800">{overview.total_products}</div>
-          </div>
-          <div className="stat-card">
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Stock Value</div>
-            <div className="text-2xl font-extrabold text-slate-800">
-              ₹{(overview.total_stock_value / 1000).toFixed(1)}K
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-red-500 mb-1">
-              <AlertTriangle size={12} /> Critical
-            </div>
-            <div className="text-2xl font-extrabold text-red-500">
-              {overview.risk_distribution.critical}
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-500 mb-1">
-              <AlertCircle size={12} /> Warning
-            </div>
-            <div className="text-2xl font-extrabold text-amber-500">
-              {overview.risk_distribution.warning}
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-500 mb-1">
-              <Package size={12} /> Healthy
-            </div>
-            <div className="text-2xl font-extrabold text-emerald-500">
-              {overview.risk_distribution.healthy}
-            </div>
-          </div>
+    <>
+      <PageHeader title="Inventory intelligence" icon={Warehouse}
+        subtitle={d ? `Velocity measured over the 28 days before ${dateFmt(d.reference_time)}${d.data_mode === "SYNTHETIC" ? " (end of the demo dataset)" : ""}` : undefined} />
+      {inv.error ? <ErrorState message={inv.error} onRetry={inv.reload} /> : !d ? <SkeletonCards n={4} /> : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Tile label="Inventory value" value={compactInr(d.value_at_cost)} sub={`${compactInr(d.value_at_retail)} at retail`} />
+          <Tile label="Units on hand" value={num(d.total_units)} tone="slate" sub={`${d.total_products} active products`} />
+          <Tile label="Low / out of stock" value={(d.status_counts.LOW_STOCK ?? 0) + (d.status_counts.OUT_OF_STOCK ?? 0)} tone="amber" sub={`${d.status_counts.PREDICTED_STOCKOUT ?? 0} may stock out before a reorder arrives`} />
+          <Tile label="Expiry risk" value={d.status_counts.EXPIRY_RISK ?? 0} tone="red" sub={`${inr(d.expiry_risk_value_at_cost, 0)} of stock may expire unsold`} />
         </div>
       )}
+      <div className="my-6"><Tabs<Tab> tabs={[{ id: "intelligence", label: "Stock intelligence" }, { id: "expiry", label: "Expiry optimization" }, { id: "movements", label: "Stock movements" }]} value={tab} onChange={setTab} /></div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Risk Matrix */}
-        <div className="lg:col-span-2">
-          <h2 className="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2">
-            <ShieldAlert size={18} className="text-violet-600" />
-            Risk Matrix
-          </h2>
-          <InventoryMatrix products={products} height={350} />
-        </div>
-
-        {/* Alerts */}
-        <div>
-          <h2 className="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2">
-            <AlertTriangle size={18} className="text-[#f59e0b]" />
-            Active Alerts ({alerts.length})
-          </h2>
-          <div className="space-y-2 max-h-[430px] overflow-y-auto pr-1">
-            {alerts.slice(0, 15).map((alert, i) => (
-              <div
-                key={i}
-                className="rounded-xl px-4 py-3"
-                style={alertStyle(alert.type)}
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  {alertIcon(alert.type)}
-                  <span className="text-xs font-bold text-slate-800">
-                    {alert.title}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 font-medium">
-                  {alert.message}
-                </p>
-              </div>
-            ))}
-            {alerts.length === 0 && (
-              <div className="text-center py-8 text-slate-400">
-                <Package size={24} className="mx-auto mb-2 opacity-45" />
-                <p className="text-sm font-medium">No active alerts</p>
-              </div>
+      {tab === "intelligence" && d && (
+        <div className="grid gap-6 xl:grid-cols-4">
+          <Card title="Status distribution" className="xl:col-span-1"><StatusBarChart counts={d.status_counts} height={240} />
+            <h3 className="mt-4 text-sm font-semibold text-slate-700">Category health</h3>
+            <ul className="mt-2 space-y-1 text-sm">{d.categories.map((c) => (
+              <li key={c.category} className="flex justify-between"><span>{c.category}</span><span className="num text-slate-600">{pct(c.health_pct, 0)} healthy · {c.at_risk} at risk</span></li>))}</ul>
+          </Card>
+          <Card title="Products" className="xl:col-span-3" actions={
+            <select className="select !w-auto" value={status} onChange={(e) => setStatus(e.target.value as typeof status)} aria-label="Status filter">
+              {STATUS_FILTERS.map((s) => <option key={s} value={s}>{s === "ALL" ? "All statuses" : s.replace(/_/g, " ").toLowerCase()}</option>)}</select>}>
+            {rows.length === 0 ? <EmptyState title="No products with this status" /> : (
+              <div className="table-wrap"><table className="data-table">
+                <thead><tr><th>Product</th><th className="text-right">Stock</th><th className="text-right">Units/day</th><th className="text-right">Days of cover</th><th>Stock-out</th>
+                  <th className="text-right">Safety stock</th><th className="text-right">Reorder qty</th><th>Expiry / wastage risk</th><th>Status</th></tr></thead>
+                <tbody>{rows.map((p) => (
+                  <tr key={p.product_id}>
+                    <td className="min-w-[180px]"><Link href={`/product/${p.product_id}`} className="font-medium text-violet-700 hover:underline">{p.name}</Link><div className="text-[11px] text-slate-400">{p.sku} · {p.data_sufficiency} data</div></td>
+                    <td className="num text-right">{p.stock}</td>
+                    <td className="num text-right">{p.avg_daily_units}</td>
+                    <td className="num text-right">{p.days_of_cover ?? "—"}</td>
+                    <td className="text-xs">{p.predicted_stockout_date ? dateFmt(p.predicted_stockout_date) : "—"}</td>
+                    <td className="num text-right" title="1.65 × σ × √lead time">{p.recommended_safety_stock ?? "—"}</td>
+                    <td className="num text-right font-semibold">{p.recommended_reorder_qty || "—"}</td>
+                    <td className="text-xs">{p.days_to_expiry === null ? "—" : p.days_to_expiry < 0 ? "expired" : `${p.days_to_expiry} d`}
+                      {p.units_at_expiry_risk ? <div className="text-red-700" title="Units (and share of stock) not expected to sell before expiry at the current velocity">{p.units_at_expiry_risk} at risk{p.wastage_risk_pct !== null ? ` · ${pct(p.wastage_risk_pct, 0)}` : ""}</div> : null}</td>
+                    <td><div className="flex flex-wrap gap-1">{p.statuses.length ? p.statuses.map((s) => <Pill key={s} tone={s.includes("OUT") || s.includes("EXPIRY") ? "red" : s.includes("OVER") || s.includes("DEAD") ? "sky" : "amber"}>{s.replace(/_/g, " ").toLowerCase()}</Pill>) : <Pill tone="green">healthy</Pill>}</div></td>
+                  </tr>))}</tbody>
+              </table></div>
             )}
-          </div>
-        </div>
-      </div>
-
-      {/* Category Health + Expiry Timeline */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Category Health Bars */}
-        {overview && (
-          <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm">
-            <h2 className="text-lg font-extrabold text-slate-800 mb-4">Category Health</h2>
-            <div className="space-y-4">
-              {overview.category_health.map((cat) => (
-                <div key={cat.category}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-slate-700 capitalize">
-                      {cat.category}
-                    </span>
-                    <span className="text-xs text-slate-400 font-semibold">
-                      {cat.healthy}/{cat.total_products} healthy · {cat.health_pct}%
-                    </span>
-                  </div>
-                  <div className="h-2.5 rounded-full overflow-hidden bg-slate-100 border border-slate-200/20">
-                    <div className="h-full flex">
-                      {cat.healthy > 0 && (
-                        <div
-                          className="h-full"
-                          style={{
-                            width: `${(cat.healthy / cat.total_products) * 100}%`,
-                            background: "#10b981",
-                          }}
-                        />
-                      )}
-                      {cat.at_risk > 0 && (
-                        <div
-                          className="h-full"
-                          style={{
-                            width: `${(cat.at_risk / cat.total_products) * 100}%`,
-                            background: "#f59e0b",
-                          }}
-                        />
-                      )}
-                      {cat.critical > 0 && (
-                        <div
-                          className="h-full"
-                          style={{
-                            width: `${(cat.critical / cat.total_products) * 100}%`,
-                            background: "#ef4444",
-                          }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center gap-4 mt-5 pt-1 border-t border-slate-100">
-              {[
-                { label: "Healthy", color: "#10b981" },
-                { label: "At Risk", color: "#f59e0b" },
-                { label: "Critical", color: "#ef4444" },
-              ].map((l) => (
-                <div key={l.label} className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: l.color }} />
-                  <span className="text-xs font-semibold text-slate-500">{l.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Expiry Risk Table */}
-        <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2">
-            <Clock size={18} className="text-red-500" />
-            Expiry Risk Products
-          </h2>
-          {expiryRisk.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">
-              <Package size={24} className="mx-auto mb-2 opacity-45" />
-              <p className="text-sm font-medium">No products at expiry risk</p>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-              {expiryRisk.map((item) => {
-                const riskColor =
-                  item.risk_level === "critical"
-                    ? "#ef4444"
-                    : item.risk_level === "warning"
-                    ? "#f59e0b"
-                    : "#0891b2";
-                return (
-                  <div
-                    key={item.product_id}
-                    className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-100/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ background: riskColor }}
-                      />
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-400 font-mono">
-                          #{item.product_id}
-                        </span>
-                        <span className="text-sm font-semibold text-slate-800">
-                          {item.product_name || getProductName(item.product_id, undefined, item.category)}
-                        </span>
-                      </div>
-                      <span className="badge capitalize text-xs"
-                        style={{ background: `${riskColor}12`, color: riskColor, border: `1px solid ${riskColor}18` }}>
-                        {item.risk_level}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
-                      <span>{item.days_to_expiry}d left</span>
-                      <span>{item.stock_level} units</span>
-                      <span className="text-emerald-600 font-bold">
-                        →₹{item.suggested_price}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Stock Distribution */}
-      {overview && (
-        <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-lg font-extrabold text-slate-800 mb-4">Stock Distribution</h2>
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: "Low Stock (<30)", value: overview.stock_distribution.low_stock, color: "#ef4444", icon: TrendingDown },
-              { label: "Optimal (30-150)", value: overview.stock_distribution.optimal, color: "#10b981", icon: Package },
-              { label: "Overstock (>150)", value: overview.stock_distribution.overstock, color: "#f59e0b", icon: Warehouse },
-            ].map(({ label, value, color, icon: Icon }) => (
-              <div key={label} className="text-center rounded-xl p-4 bg-slate-50 border border-slate-100/50">
-                <Icon size={20} className="mx-auto mb-2" style={{ color }} />
-                <div className="text-2xl font-extrabold text-slate-800 mb-1">{value}</div>
-                <div className="text-xs font-semibold text-slate-400">{label}</div>
-              </div>
-            ))}
-          </div>
+          </Card>
         </div>
       )}
-    </div>
+      {tab === "expiry" && <ExpiryTab />}
+      {tab === "movements" && <MovementsTab />}
+    </>
+  );
+}
+
+function ExpiryTab() {
+  const { storeId } = useApp();
+  const ex = useAsync(() => getExpiryOptimization(storeId), [storeId]);
+  if (ex.error) return <ErrorState message={ex.error} onRetry={ex.reload} />;
+  if (!ex.data) return <SkeletonRows rows={6} cols={7} />;
+  return (
+    <Card title="Markdown recommendations for expiring stock"
+      subtitle={`Products expiring within ${ex.data.window_days} days (or 14). Markdowns up to ${ex.data.max_markdown_pct.toFixed(0)}%, never below ${ex.data.floor}. ${ex.data.method}`}>
+      {ex.data.items.length === 0 ? <EmptyState title="No stock is close to expiry" /> : (
+        <div className="table-wrap"><table className="data-table">
+          <thead><tr><th>Product</th><th className="text-right">Days left</th><th className="text-right">Stock</th><th className="text-right">Wastage risk at current price</th>
+            <th className="text-right">Recommended</th><th className="text-right">Expected liquidation</th><th className="text-right">Waste avoided</th><th className="text-right">Profit gain</th></tr></thead>
+          <tbody>{ex.data.items.map((i) => (
+            <tr key={i.product_id}>
+              <td className="min-w-[180px]"><Link href={`/product/${i.product_id}`} className="font-medium text-violet-700 hover:underline">{i.product_name}</Link><div className="flex flex-wrap gap-1"><Pill tone={i.expiry_risk === "CRITICAL" ? "red" : i.expiry_risk === "HIGH" ? "amber" : "slate"}>{i.expiry_risk}</Pill>
+                {i.considerations && i.considerations.length > 0 && <Pill tone="violet" title={i.considerations.map((c) => `${c.name} (${c.applied_change_pct > 0 ? "+" : ""}${c.applied_change_pct}% demand)`).join("; ")}>seasonal consideration</Pill>}</div></td>
+              <td className="num text-right">{i.days_to_expiry}</td><td className="num text-right">{i.stock}</td>
+              <td className="num text-right">{num(i.at_current_price.waste_units)} units{i.wastage_risk_pct != null ? <div className="text-[11px] text-slate-500">{pct(i.wastage_risk_pct, 0)} of stock</div> : null}</td>
+              <td className="num text-right font-semibold">{i.recommended.markdown_pct > 0 ? `−${i.recommended.markdown_pct}% → ${inr(i.recommended.price)}` : `Hold ${inr(i.recommended.price)}`}</td>
+              <td className="num text-right">{pct(i.recommended.liquidation_pct, 0)}</td>
+              <td className="num text-right text-emerald-700">{num(i.waste_reduction_units)}</td>
+              <td className={`num text-right font-semibold ${i.profit_gain >= 0 ? "text-emerald-700" : "text-red-700"}`}>{inr(i.profit_gain)}</td>
+            </tr>))}</tbody>
+        </table></div>
+      )}
+      <p className="mt-2 text-xs text-slate-500">Apply a markdown by generating a price recommendation on the product page — it passes the same constraint checks and approval workflow.</p>
+    </Card>
+  );
+}
+
+function MovementsTab() {
+  const { storeId } = useApp();
+  const mv = useAsync(() => getMovements(storeId), [storeId]);
+  if (mv.error) return <ErrorState message={mv.error} onRetry={mv.reload} />;
+  if (!mv.data) return <SkeletonRows rows={6} cols={6} />;
+  return (
+    <Card title="Recent stock movements" subtitle="Every stock change is logged automatically (sales, restocks, adjustments, waste, imports)">
+      {mv.data.data.length === 0 ? <EmptyState title="No movements yet" /> : (
+        <div className="table-wrap"><table className="data-table">
+          <thead><tr><th>When</th><th>Product</th><th>Reason</th><th className="text-right">Change</th><th className="text-right">Stock after</th><th>By</th></tr></thead>
+          <tbody>{mv.data.data.map((m) => (
+            <tr key={m.id}><td className="text-xs">{dateFmt(m.created_at, true)}</td><td>{m.product_name}</td><td><Pill>{m.reason}</Pill></td>
+              <td className={`num text-right ${m.change < 0 ? "text-red-700" : "text-emerald-700"}`}>{m.change > 0 ? "+" : ""}{m.change}</td><td className="num text-right">{m.stock_after}</td><td className="text-xs">{m.created_by ?? "system"}</td></tr>))}</tbody>
+        </table></div>
+      )}
+    </Card>
   );
 }

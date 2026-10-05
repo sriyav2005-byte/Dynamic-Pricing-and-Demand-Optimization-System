@@ -64,6 +64,8 @@ body {
 
 /* Stat cards */
 .stat-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 16px;
@@ -131,3 +133,57 @@ body {
   color: #7c3aed;
   border: 1px solid rgba(124, 58, 237, 0.15);
 }
+
+/* ── PriceIQ v5 UI utilities ───────────────────────────────────────────────── */
+.card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px -6px rgba(15, 23, 42, 0.06);
+}
+.input, .select {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input:focus, .select:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15); }
+.input:disabled, .select:disabled { background: #f8fafc; color: #94a3b8; }
+.btn-primary, .btn-secondary, .btn-danger, .btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+  border-radius: 10px; padding: 0.5rem 0.9rem; font-size: 0.875rem; font-weight: 600;
+  transition: all 0.15s ease; white-space: nowrap;
+}
+.btn-primary { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25); }
+.btn-primary:hover:not(:disabled) { box-shadow: 0 6px 18px rgba(124, 58, 237, 0.4); }
+.btn-secondary { background: #fff; color: #334155; border: 1px solid #e2e8f0; }
+.btn-secondary:hover:not(:disabled) { border-color: #c4b5fd; color: #6d28d9; }
+.btn-danger { background: #dc2626; color: #fff; }
+.btn-danger:hover:not(:disabled) { background: #b91c1c; }
+.btn-ghost { color: #6d28d9; padding: 0.35rem 0.6rem; }
+.btn-ghost:hover:not(:disabled) { background: rgba(124, 58, 237, 0.08); }
+.btn-primary:disabled, .btn-secondary:disabled, .btn-danger:disabled, .btn-ghost:disabled { opacity: 0.5; cursor: not-allowed; }
+.skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #eef2f7 25%, #f8fafc 50%, #eef2f7 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid rgba(15, 23, 42, 0.06); }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th { text-align: left; white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid #7c3aed; outline-offset: 2px; }
+.prose-chat p { margin: 0.35rem 0; }
+.prose-chat ul { list-style: disc; padding-left: 1.2rem; margin: 0.35rem 0; }
+.prose-chat table { border-collapse: collapse; margin: 0.5rem 0; font-size: 0.8rem; }
+.prose-chat th, .prose-chat td { border: 1px solid #e2e8f0; padding: 0.25rem 0.5rem; text-align: left; }
+.prose-chat th { background: #f5f3ff; }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } * { transition: none !important; } }

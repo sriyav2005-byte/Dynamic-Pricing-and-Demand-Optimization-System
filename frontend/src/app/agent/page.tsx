@@ -1,353 +1,129 @@
-/**
- * app/agent/page.tsx — AI Agent Chat Interface
- * ===============================================
- * Conversational AI interface for shop owners.
- * Features chat bubbles, rich response cards, suggested questions,
- * and typing indicator animation.
- */
-
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
-import {
-  sendChatMessage,
-  getAgentSuggestions,
-  ChatResponse,
-  SuggestedQuestion,
-} from "@/lib/api";
-import ChatBubble from "@/components/agent/ChatBubble";
-import AgentResponseCard from "@/components/agent/AgentResponseCard";
-import {
-  Send,
-  Bot,
-  Sparkles,
-  MessageSquare,
-  Tag,
-  Clock,
-  BarChart3,
-  HelpCircle,
-  TrendingUp,
-  AlertTriangle,
-} from "lucide-react";
+/** /agent — Retail Copilot: LLM with controlled tools over live store data + RAG policy knowledge. */
 
-interface Message {
-  id: string;
-  role: "user" | "agent";
-  content: string;
-  timestamp: string;
-  data?: unknown;
-  dataType?: string | null;
-  suggestions?: string[];
-}
+import { useEffect, useRef, useState } from "react";
+import { Bot, BookOpen, MessageSquarePlus, Send, Wrench } from "lucide-react";
+import { chat, ChatMessage, dateFmt, errorMessage, getConversation, getConversations } from "@/lib/api";
+import { useApp } from "@/components/providers/AppProvider";
+import { Notice, Pill, Spinner, useAsync } from "@/components/ui/kit";
+import Markdown from "@/components/ui/Markdown";
 
-const iconMap: Record<string, React.ReactNode> = {
-  tag: <Tag size={12} />,
-  clock: <Clock size={12} />,
-  chart: <BarChart3 size={12} />,
-  help: <HelpCircle size={12} />,
-  trending: <TrendingUp size={12} />,
-  alert: <AlertTriangle size={12} />,
-};
+const SUGGESTIONS = [
+  "Which products may stock out?",
+  "Which products are close to expiry?",
+  "Which competitors are cheaper?",
+  "Which products generated the most profit?",
+  "Which products have high demand but low stock?",
+  "Show my biggest pricing opportunities.",
+  "What is the maximum price change allowed and why?",
+];
 
 export default function AgentPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { storeId } = useApp();
+  return <Copilot key={storeId} />;
+}
+
+function Copilot() {
+  const { storeId, store } = useApp();
+  const convs = useAsync(() => getConversations(storeId), [storeId]);
+  const [convId, setConvId] = useState<string | undefined>();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
-  const [suggestions, setSuggestions] = useState<SuggestedQuestion[]>([]);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [meta, setMeta] = useState<{ mode: string; provider: string | null; model: string | null; warnings: string[] | null; factors: string[] | null } | null>(null);
+  const [error, setError] = useState("");
+  const end = useRef<HTMLDivElement>(null);
 
-  // Load suggestions + welcome message
-  useEffect(() => {
-    (async () => {
-      try {
-        const sug = await getAgentSuggestions();
-        setSuggestions(sug);
-      } catch (e) {
-        console.error(e);
-      }
+  useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, busy]);
 
-      // Welcome message
-      setMessages([
-        {
-          id: "welcome",
-          role: "agent",
-          content:
-            "👋 **Hello! I'm your PriceIQ AI Assistant.**\n\n" +
-            "I can help you with pricing decisions, discount strategies, " +
-            "competitor analysis, and inventory management. " +
-            "Ask me anything or pick a suggestion below!",
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          suggestions: [
-            "Which products should be discounted today?",
-            "What products are at expiry risk?",
-            "How does my pricing compare with competitors?",
-          ],
-        },
-      ]);
-    })();
-  }, []);
+  async function open(id: string) {
+    setConvId(id);
+    setMeta(null);
+    try { setMessages(await getConversation(storeId, id)); } catch (e) { setError(errorMessage(e)); }
+  }
 
-  // Auto-scroll to bottom
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const handleSend = useCallback(
-    async (text?: string) => {
-      const msg = (text || input).trim();
-      if (!msg || sending) return;
-
-      const time = new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
-      // Add user message
-      const userMsg: Message = {
-        id: `user-${Date.now()}`,
-        role: "user",
-        content: msg,
-        timestamp: time,
-      };
-      setMessages((prev) => [...prev, userMsg]);
-      setInput("");
-      setSending(true);
-
-      try {
-        const response: ChatResponse = await sendChatMessage(msg);
-
-        const agentMsg: Message = {
-          id: `agent-${Date.now()}`,
-          role: "agent",
-          content: response.response_text,
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          data: response.data,
-          dataType: response.data_type,
-          suggestions: response.suggestions,
-        };
-        setMessages((prev) => [...prev, agentMsg]);
-      } catch (e) {
-        const errorMsg: Message = {
-          id: `error-${Date.now()}`,
-          role: "agent",
-          content:
-            "❌ Sorry, I encountered an error processing your request. " +
-            "Please make sure the backend server is running and try again.",
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        };
-        setMessages((prev) => [...prev, errorMsg]);
-      } finally {
-        setSending(false);
-        inputRef.current?.focus();
-      }
-    },
-    [input, sending]
-  );
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  // Get the latest suggestions from the last agent message
-  const latestSuggestions =
-    [...messages].reverse().find((m) => m.role === "agent" && m.suggestions?.length)
-      ?.suggestions || [];
+  async function send(text = input) {
+    const msg = text.trim();
+    if (!msg || busy) return;
+    setInput("");
+    setError("");
+    setMessages((m) => [...m, { id: `tmp-${Date.now()}`, role: "user", content: msg, tool_calls: [], sources: [], created_at: new Date().toISOString() }]);
+    setBusy(true);
+    try {
+      const r = await chat(storeId, msg, convId);
+      setConvId(r.conversation_id);
+      setMessages((m) => [...m, r.message]);
+      setMeta({ mode: r.mode, provider: r.provider, model: r.model, warnings: r.warnings, factors: r.reasoning_factors });
+      if (!convId) convs.reload();
+    } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
+  }
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50">
-      {/* Header */}
-      <div className="p-6 pb-4 border-b bg-white" style={{ borderColor: "rgba(0, 0, 0, 0.05)" }}>
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{
-              background: "linear-gradient(135deg, #7c3aed, #22d3ee)",
-              boxShadow: "0 0 20px rgba(124, 58, 237, 0.25)",
-            }}
-          >
-            <Bot size={20} className="text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
-              PriceIQ Agent
-              <Sparkles size={16} className="text-[#22d3ee]" />
-            </h1>
-            <p className="text-xs font-semibold text-slate-400">
-              AI-powered pricing advisor · Ask about pricing, inventory, and competitors
-            </p>
-          </div>
+    <div className="flex h-[calc(100vh-7rem)] gap-6">
+      <aside className="hidden w-64 shrink-0 flex-col rounded-2xl border border-slate-100 bg-white p-3 lg:flex">
+        <button className="btn-primary mb-3" onClick={() => { setConvId(undefined); setMessages([]); setMeta(null); }}><MessageSquarePlus size={15} /> New conversation</button>
+        <p className="px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">History · {store?.store_name}</p>
+        <div className="mt-1 flex-1 overflow-y-auto">
+          {convs.data?.length === 0 && <p className="px-2 py-4 text-xs text-slate-400">No conversations yet.</p>}
+          {convs.data?.map((c) => (
+            <button key={c.id} onClick={() => open(c.id)} className={`block w-full rounded-lg px-2 py-2 text-left text-sm hover:bg-slate-50 ${convId === c.id ? "bg-violet-50 text-violet-800" : "text-slate-600"}`}>
+              <p className="truncate">{c.title || "Conversation"}</p><p className="text-[10px] text-slate-400">{dateFmt(c.updated_at, true)}</p>
+            </button>
+          ))}
         </div>
-      </div>
+      </aside>
 
-      {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-3">
-        {messages.map((msg) => (
-          <div key={msg.id}>
-            <ChatBubble
-              role={msg.role}
-              content={msg.content}
-              timestamp={msg.timestamp}
-            />
-            {msg.role === "agent" && msg.data && msg.dataType ? (
-              <div className="ml-11">
-                <AgentResponseCard
-                  data={msg.data as Record<string, unknown> | unknown[]}
-                  dataType={msg.dataType}
-                />
-              </div>
-            ) : null}
+      <section className="flex flex-1 flex-col rounded-2xl border border-slate-100 bg-white">
+        <header className="flex items-center gap-3 border-b border-slate-100 px-5 py-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "linear-gradient(135deg,#7c3aed,#22d3ee)" }}><Bot size={18} className="text-white" /></div>
+          <div className="flex-1">
+            <p className="font-semibold text-slate-800">Retail Copilot</p>
+            <p className="text-xs text-slate-500">Answers from your store&apos;s live data through controlled tools, with your permissions. It cannot change prices or stock.</p>
           </div>
-        ))}
+          {meta && <Pill tone={meta.mode === "llm" ? "violet" : "slate"}>{meta.mode === "llm" ? `LLM · ${meta.provider ?? ""} · ${meta.model ?? ""}` : meta.mode === "rule_based" ? "Rule-based fallback" : "error"}</Pill>}
+        </header>
 
-        {/* Typing indicator */}
-        {sending && (
-          <div className="flex gap-3 mb-4">
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{
-                background: "linear-gradient(135deg, #7c3aed, #22d3ee)",
-              }}
-            >
-              <Bot size={14} className="text-white" />
-            </div>
-            <div
-              className="rounded-2xl rounded-tl-md px-4 py-3"
-              style={{
-                background: "rgba(0, 0, 0, 0.02)",
-                border: "1px solid rgba(0, 0, 0, 0.05)",
-              }}
-            >
-              <div className="flex gap-1.5">
-                <div
-                  className="w-2 h-2 rounded-full animate-bounce"
-                  style={{ background: "#7c3aed", animationDelay: "0ms" }}
-                />
-                <div
-                  className="w-2 h-2 rounded-full animate-bounce"
-                  style={{ background: "#8b5cf6", animationDelay: "150ms" }}
-                />
-                <div
-                  className="w-2 h-2 rounded-full animate-bounce"
-                  style={{ background: "#22d3ee", animationDelay: "300ms" }}
-                />
+        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4" aria-live="polite">
+          {messages.length === 0 && (
+            <div className="mx-auto max-w-2xl py-8 text-center">
+              <p className="text-lg font-semibold text-slate-700">Ask about pricing, stock, expiry, competitors or profits</p>
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                {SUGGESTIONS.map((s) => <button key={s} onClick={() => send(s)} className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm text-violet-800 hover:bg-violet-100">{s}</button>)}
               </div>
             </div>
-          </div>
+          )}
+          {messages.map((m) => (
+            <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${m.role === "user" ? "bg-violet-600 text-white" : "border border-slate-100 bg-slate-50"}`}>
+                {m.role === "user" ? <p className="whitespace-pre-wrap text-sm">{m.content}</p> : <Markdown text={m.content} />}
+                {m.role === "assistant" && (m.tool_calls.length > 0 || m.sources.length > 0) && (
+                  <details className="mt-2 text-xs text-slate-500">
+                    <summary className="cursor-pointer select-none">Data used: {m.tool_calls.length} tool call(s){m.sources.length ? `, ${m.sources.length} policy document(s)` : ""}</summary>
+                    <ul className="mt-1 space-y-0.5">
+                      {m.tool_calls.map((t, i) => <li key={i} className="flex items-center gap-1"><Wrench size={11} /> <code>{t.tool}</code> {JSON.stringify(t.input) !== "{}" && <span className="truncate text-slate-400">{JSON.stringify(t.input)}</span>} {!t.ok && <span className="text-red-600">failed: {t.error}</span>}</li>)}
+                      {m.sources.map((s, i) => <li key={`s${i}`} className="flex items-center gap-1"><BookOpen size={11} /> {s.title}</li>)}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            </div>
+          ))}
+          {busy && <div className="flex items-center gap-2 text-sm text-slate-500"><Spinner /> Looking up your store data…</div>}
+          <div ref={end} />
+        </div>
+
+        {!!meta?.factors?.length && (
+          <div className="px-5 pb-1 text-xs text-slate-500"><span className="font-medium text-slate-600">Key factors (last answer):</span> {meta.factors.join(" · ")}</div>
         )}
-
-        <div ref={chatEndRef} />
-      </div>
-
-      {/* Suggestions */}
-      {latestSuggestions.length > 0 && !sending && (
-        <div className="px-6 pb-2">
-          <div className="flex flex-wrap gap-2">
-            {latestSuggestions.map((sug, i) => (
-              <button
-                key={i}
-                onClick={() => handleSend(sug)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer"
-                style={{
-                  background: "rgba(124, 58, 237, 0.08)",
-                  border: "1px solid rgba(124, 58, 237, 0.15)",
-                  color: "#7c3aed",
-                }}
-              >
-                <MessageSquare size={10} />
-                {sug}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Quick Suggestions from API (initial) */}
-      {messages.length <= 1 && suggestions.length > 0 && (
-        <div className="px-6 pb-2">
-          <div className="text-xs font-bold mb-2 text-slate-400 uppercase tracking-widest">
-            SUGGESTED QUESTIONS
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map((sug, i) => (
-              <button
-                key={i}
-                onClick={() => handleSend(sug.text)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer shadow-sm"
-                style={{
-                  background:
-                    sug.category === "urgent"
-                      ? "rgba(239, 68, 68, 0.08)"
-                      : "#ffffff",
-                  border: `1px solid ${
-                    sug.category === "urgent"
-                      ? "rgba(239, 68, 68, 0.15)"
-                      : "rgba(0, 0, 0, 0.06)"
-                  }`,
-                  color: sug.category === "urgent" ? "#ef4444" : "#475569",
-                }}
-              >
-                {iconMap[sug.icon] || <MessageSquare size={10} />}
-                {sug.text}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Input Area */}
-      <div className="p-4 border-t bg-white" style={{ borderColor: "rgba(0, 0, 0, 0.05)" }}>
-        <div
-          className="flex items-center gap-3 rounded-2xl px-4 py-3"
-          style={{
-            background: "#ffffff",
-            border: "1px solid rgba(0, 0, 0, 0.08)",
-          }}
-        >
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask about pricing, discounts, competitors, or inventory..."
-            className="flex-1 bg-transparent outline-none text-sm text-slate-800 placeholder-slate-400"
-            disabled={sending}
-          />
-          <button
-            onClick={() => handleSend()}
-            disabled={!input.trim() || sending}
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
-            style={{
-              background:
-                input.trim() && !sending
-                  ? "linear-gradient(135deg, #7c3aed, #22d3ee)"
-                  : "rgba(0, 0, 0, 0.02)",
-              cursor: input.trim() && !sending ? "pointer" : "not-allowed",
-              opacity: input.trim() && !sending ? 1 : 0.5,
-            }}
-          >
-            <Send size={14} className={input.trim() && !sending ? "text-white" : "text-slate-300"} />
-          </button>
-        </div>
-        <div className="text-center mt-2.5">
-          <span className="text-[10px] font-bold text-slate-400">
-            Powered by PriceIQ ML Engine · Thompson Sampling + XGBoost
-          </span>
-        </div>
-      </div>
+        {(error || meta?.warnings?.length) && (
+          <div className="space-y-1 px-5">{error && <Notice tone="danger">{error}</Notice>}{meta?.warnings?.map((w, i) => <Notice key={i} tone="warning">{w}</Notice>)}</div>
+        )}
+        <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex gap-2 border-t border-slate-100 p-4">
+          <input className="input flex-1" placeholder="e.g. Why was the price of Amul Butter recommended?" value={input} onChange={(e) => setInput(e.target.value)} maxLength={4000} aria-label="Message" />
+          <button className="btn-primary" disabled={busy || !input.trim()} aria-label="Send"><Send size={15} /></button>
+        </form>
+      </section>
     </div>
   );
 }

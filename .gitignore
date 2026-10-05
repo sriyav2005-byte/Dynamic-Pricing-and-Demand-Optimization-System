@@ -20,13 +20,11 @@ env/
 .env.*.local
 
 # ── ML / Model artifacts ─────────────────────────────────────────────────────
-# Serialised model files are large binaries — store in cloud storage instead
+# Serialised model files are large binaries — retrain locally (see README)
 *.pkl
-# Bandit state is machine-specific; let each deployment learn from scratch
-backend/ml/bandit_state.json
 
 # ── Database ──────────────────────────────────────────────────────────────────
-# SQLite file is local dev only — use a real DB in production
+# Stray local database files (PriceIQ uses PostgreSQL)
 *.db
 *.sqlite3
 
@@ -43,3 +41,10 @@ frontend/out/
 .idea/
 .DS_Store
 Thumbs.db
+# Local embedded Postgres (backend-go/cmd/devdb)
+backend-go/.devdata/
+backend-go/.devdb.log
+backend-go/*.exe
+backend-go/.server.log
+backend-go/.ai.log
+backend-go/.web.log

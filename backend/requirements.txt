@@ -1,14 +1,19 @@
-fastapi
-uvicorn[standard]
-sqlalchemy
-pydantic
-pydantic-settings
-xgboost
-scikit-learn
-pandas
-numpy
-python-dotenv
-httpx
-aiofiles
-beautifulsoup4
-lxml
+# PriceIQ AI service (Python / FastAPI)
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.7
+pydantic-settings>=2.3
+SQLAlchemy>=2.0
+psycopg2-binary>=2.9
+pandas>=2.2
+numpy>=1.26
+scipy>=1.13
+statsmodels>=0.14
+scikit-learn>=1.5
+xgboost>=2.1
+httpx>=0.27               # Go API calls from copilot tools + the LLM provider (OpenAI-compatible HTTP)
+rapidfuzz>=3.9
+playwright>=1.45          # then: python -m playwright install chromium
+python-dotenv>=1.0
+# tests
+pytest>=8
